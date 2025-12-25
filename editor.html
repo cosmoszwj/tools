@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>极简修图神器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+        /* 自定义滑块样式 */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #3B82F6;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #E2E8F0;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen p-4 md:p-8 text-slate-700 font-sans">
+
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row gap-6 h-[90vh]">
+        
+        <!-- 左侧：图片预览区 -->
+        <div class="flex-1 glass rounded-2xl p-4 flex items-center justify-center relative overflow-hidden bg-gray-50/50 border-2 border-dashed border-gray-300 transition-all" id="dropZone">
+            
+            <!-- 未上传时的提示 -->
+            <div id="uploadPrompt" class="text-center cursor-pointer">
+                <div class="text-5xl mb-4">🖼️</div>
+                <h3 class="text-xl font-bold mb-2">点击或拖拽上传照片</h3>
+                <p class="text-sm text-gray-400">支持 JPG, PNG, WebP (本地处理，不上传)</p>
+                <input type="file" id="fileInput" accept="image/*" class="hidden">
+            </div>
+
+            <!-- 图片画布 -->
+            <canvas id="canvas" class="hidden max-w-full max-h-full object-contain shadow-2xl rounded-lg"></canvas>
+            
+            <!-- 重置/下载按钮组 (图片加载后显示) -->
+            <div id="actionBtns" class="hidden absolute top-4 right-4 flex gap-2">
+                <button onclick="resetImage()" class="bg-white/80 hover:bg-white text-gray-700 px-3 py-1 rounded-lg text-sm font-medium shadow backdrop-blur transition">↺ 重置</button>
+                <button onclick="downloadImage()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm font-medium shadow transition">⬇ 下载</button>
+            </div>
+        </div>
+
+        <!-- 右侧：控制台 -->
+        <div class="w-full md:w-80 glass rounded-2xl p-6 flex flex-col gap-6 overflow-y-auto hidden" id="controlsPanel">
+            
+            <div>
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <span>✨</span> 一键滤镜
+                </h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="applyPreset('landscape')" class="bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded-xl text-sm font-bold transition">🌲 风景大片</button>
+                    <button onclick="applyPreset('portrait')" class="bg-pink-100 hover:bg-pink-200 text-pink-700 py-2 rounded-xl text-sm font-bold transition">👩 人像柔美</button>
+                    <button onclick="applyPreset('architecture')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-xl text-sm font-bold transition">🏢 建筑质感</button>
+                    <button onclick="applyPreset('film')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 py-2 rounded-xl text-sm font-bold transition">🎞️ 复古胶片</button>
+                    <button onclick="applyPreset('bw')" class="bg-gray-800 hover:bg-black text-white py-2 rounded-xl text-sm font-bold transition col-span-2">⚫ 黑白艺术</button>
+                </div>
+            </div>
+
+            <hr class="border-gray-200">
+
+            <div>
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <span>🎛️</span> 手动微调
+                </h2>
+                <div class="space-y-4">
+                    <!-- 亮度 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span>亮度 (Brightness)</span>
+                            <span id="val-brightness">100%</span>
+                        </div>
+                        <input type="range" id="brightness" min="0" max="200" value="100" oninput="updateFilter()">
+                    </div>
+                    <!-- 对比度 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span>对比度 (Contrast)</span>
+                            <span id="val-contrast">100%</span>
+                        </div>
+                        <input type="range" id="contrast" min="0" max="200" value="100" oninput="updateFilter()">
+                    </div>
+                    <!-- 饱和度 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span>饱和度 (Saturate)</span>
+                            <span id="val-saturate">100%</span>
+                        </div>
+                        <input type="range" id="saturate" min="0" max="200" value="100" oninput="updateFilter()">
+                    </div>
+                    <!-- 色温/色相 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span>色调偏移 (Hue)</span>
+                            <span id="val-hue">0deg</span>
+                        </div>
+                        <input type="range" id="hue" min="-180" max="180" value="0" oninput="updateFilter()">
+                    </div>
+                     <!-- 模糊 -->
+                     <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span>模糊/柔焦 (Blur)</span>
+                            <span id="val-blur">0px</span>
+                        </div>
+                        <input type="range" id="blur" min="0" max="10" step="0.5" value="0" oninput="updateFilter()">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const controlsPanel = document.getElementById('controlsPanel');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+        const actionBtns = document.getElementById('actionBtns');
+
+        let originalImage = new Image();
+        let fileName = 'edited-image.png';
+
+        // 默认参数
+        let settings = {
+            brightness: 100,
+            contrast: 100,
+            saturate: 100,
+            hue: 0,
+            blur: 0,
+            sepia: 0,
+            grayscale: 0
+        };
+
+        // 绑定上传事件
+        dropZone.onclick = () => fileInput.click();
+        fileInput.onchange = (e) => loadFile(e.target.files[0]);
+        
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('bg-blue-50', 'border-blue-400'); };
+        dropZone.ondragleave = () => { dropZone.classList.remove('bg-blue-50', 'border-blue-400'); };
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('bg-blue-50', 'border-blue-400');
+            if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+        };
+
+        function loadFile(file) {
+            if (!file) return;
+            fileName = file.name;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                originalImage.src = e.target.result;
+                originalImage.onload = () => {
+                    // 初始化界面
+                    canvas.width = originalImage.width;
+                    canvas.height = originalImage.height;
+                    
+                    uploadPrompt.classList.add('hidden');
+                    canvas.classList.remove('hidden');
+                    actionBtns.classList.remove('hidden');
+                    controlsPanel.classList.remove('hidden');
+                    dropZone.classList.remove('cursor-pointer', 'border-dashed'); // 移除拖拽样式以便看图
+                    dropZone.onclick = null; // 禁止点击重新上传防止误触
+
+                    render();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateFilter() {
+            settings.brightness = document.getElementById('brightness').value;
+            settings.contrast = document.getElementById('contrast').value;
+            settings.saturate = document.getElementById('saturate').value;
+            settings.hue = document.getElementById('hue').value;
+            settings.blur = document.getElementById('blur').value;
+
+            // 更新数值显示
+            document.getElementById('val-brightness').innerText = settings.brightness + '%';
+            document.getElementById('val-contrast').innerText = settings.contrast + '%';
+            document.getElementById('val-saturate').innerText = settings.saturate + '%';
+            document.getElementById('val-hue').innerText = settings.hue + 'deg';
+            document.getElementById('val-blur').innerText = settings.blur + 'px';
+
+            render();
+        }
+
+        function render() {
+            // 构建滤镜字符串
+            const filterString = `
+                brightness(${settings.brightness}%) 
+                contrast(${settings.contrast}%) 
+                saturate(${settings.saturate}%) 
+                hue-rotate(${settings.hue}deg) 
+                blur(${settings.blur}px)
+                sepia(${settings.sepia}%)
+                grayscale(${settings.grayscale}%)
+            `;
+            
+            ctx.filter = filterString;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+        }
+
+        // 预设逻辑
+        function applyPreset(type) {
+            resetSliders();
+            switch(type) {
+                case 'landscape': // 风景：高饱和，高对比
+                    setSlider('saturate', 150);
+                    setSlider('contrast', 120);
+                    break;
+                case 'portrait': // 人像：高亮度，低对比（柔和），微暖
+                    setSlider('brightness', 110);
+                    setSlider('contrast', 90);
+                    setSlider('saturate', 105);
+                    setSlider('blur', 0.5); // 0.5像素的模糊自带磨皮效果
+                    break;
+                case 'architecture': // 建筑：极高对比，低饱和（冷淡风）
+                    setSlider('contrast', 140);
+                    setSlider('saturate', 60);
+                    break;
+                case 'film': // 胶片：暖色，低对比
+                    settings.sepia = 30; // 特殊参数
+                    setSlider('contrast', 90);
+                    setSlider('brightness', 110);
+                    break;
+                case 'bw': // 黑白
+                    settings.grayscale = 100; // 特殊参数
+                    setSlider('contrast', 120); // 黑白需要高对比才好看
+                    break;
+            }
+            updateFilter();
+        }
+
+        function setSlider(id, val) {
+            document.getElementById(id).value = val;
+            updateFilter(); // 触发更新
+        }
+
+        function resetSliders() {
+            settings = { brightness: 100, contrast: 100, saturate: 100, hue: 0, blur: 0, sepia: 0, grayscale: 0 };
+            document.getElementById('brightness').value = 100;
+            document.getElementById('contrast').value = 100;
+            document.getElementById('saturate').value = 100;
+            document.getElementById('hue').value = 0;
+            document.getElementById('blur').value = 0;
+            updateFilter();
+        }
+
+        function resetImage() {
+            resetSliders();
+            render();
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'fixed_' + fileName;
+            link.href = canvas.toDataURL('image/png', 1.0); // 导出最高质量
+            link.click();
+        }
+    </script>
+</body>
+</html>
