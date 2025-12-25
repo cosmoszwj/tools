@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmos的 AI 工具箱</title>
+    <title>我的 AI 工具箱</title>
     <!-- 引入 Tailwind CSS 让界面更好看 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -25,16 +25,15 @@
 
     <!-- 顶部标题区 -->
     <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+        <!-- 去掉了 justify-between，改为居中显示标题 -->
+        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-center items-center">
             <div class="flex items-center gap-2">
                 <span class="text-2xl">🧰</span>
                 <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                     我的个人工具箱
                 </h1>
             </div>
-            <a href="https://github.com/cosmoszwj/tools" target="_blank" class="text-sm text-slate-400 hover:text-slate-600">
-                GitHub 源码 ↗
-            </a>
+            <!-- 原来的 GitHub 链接已经被我删掉了 -->
         </div>
     </header>
 
@@ -71,11 +70,11 @@
                 </div>
                 <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-purple-600">极简修图神器</h3>
                 <p class="text-sm text-slate-500 leading-relaxed">
-                    浏览器里的“暗房”。提供风景、人像、胶片等大师级滤镜，支持亮度、对比度等精细微调。
+                    浏览器里的“暗房”。提供风景/人像/胶片等大师级滤镜，支持亮度、对比度精细微调。
                 </p>
             </a>
 
-            <!-- 工具 3：密码生成器 (如果你之前建了mima.html，这个就能用，没建也没关系，点进去会404) -->
+            <!-- 工具 3：密码生成器 -->
             <a href="mima.html" class="glass-card rounded-2xl p-6 group cursor-pointer block no-underline opacity-70 hover:opacity-100">
                 <div class="bg-green-100 w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
                     🔐
@@ -86,7 +85,7 @@
                 </p>
             </a>
 
-            <!-- 预留位：未来新工具 -->
+            <!-- 预留位 -->
             <div class="border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center text-slate-400 min-h-[200px]">
                 <div class="text-3xl mb-2">✨</div>
                 <p class="text-sm">更多 AI 工具开发中...</p>
@@ -97,7 +96,7 @@
 
     <!-- 底部版权 -->
     <footer class="text-center py-8 text-slate-400 text-sm">
-        <p>&copy; 2025 My AI Toolbox. Hosted on GitHub Pages.</p>
+        <p>&copy; 2025 Personal AI Toolbox</p>
     </footer>
 
 </body>
