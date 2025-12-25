@@ -2,15 +2,42 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>我的第一个工具</title>
+    <title>我的 AI 工具箱</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; text-align: center; }
+        h1 { color: #333; }
+        .tool-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            background: #f9f9f9;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn {
+            display: inline-block;
+            text-decoration: none;
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .btn:hover { background: #0056b3; }
     </style>
 </head>
 <body>
-    <h1>🎉 恭喜！你的网站上线了！</h1>
-    <p>这是一个测试页面。</p>
-    <button onclick="alert('你好！这是 JavaScript 在运行！')">点我试试</button>
+    <h1>🛠️ 我的个人工具箱</h1>
+    <p>这里存放我用 AI 制作的所有单页工具。</p>
+
+    <!-- 工具 1：PDF 压缩 -->
+    <div class="tool-card">
+        <h3>📄 PDF 压缩工具</h3>
+        <p>纯前端处理，安全无上传，压缩 PDF 文件体积。</p>
+        <a href="compress.html" class="btn">打开工具</a>
+    </div>
+
+    <!-- 以后有新工具，就复制一份上面的 div 改改名字和链接就行 -->
+
 </body>
 </html>
