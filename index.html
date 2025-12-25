@@ -1,43 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cosmos的 AI 工具箱</title>
+    <!-- 引入 Tailwind CSS 让界面更好看 -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; text-align: center; }
-        h1 { color: #333; }
-        .tool-card {
-            border: 1px solid #ddd;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 10px;
-            background: #f9f9f9;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        /* 增加一点磨砂玻璃质感 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
         }
-        .btn {
-            display: inline-block;
-            text-decoration: none;
-            background: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-weight: bold;
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-color: #3B82F6;
         }
-        .btn:hover { background: #0056b3; }
     </style>
 </head>
-<body>
-    <h1>🛠️ 我的个人工具箱</h1>
-    <p>这里存放我用 AI 制作的所有单页工具。</p>
+<body class="bg-slate-100 min-h-screen text-slate-700">
 
-    <!-- 工具 1：PDF 压缩 -->
-    <div class="tool-card">
-        <h3>📄 PDF 压缩工具</h3>
-        <p>纯前端处理，安全无上传，压缩 PDF 文件体积。</p>
-        <a href="compress.html" class="btn">打开工具</a>
-    </div>
+    <!-- 顶部标题区 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🧰</span>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    我的个人工具箱
+                </h1>
+            </div>
+            <a href="https://github.com/cosmoszwj/tools" target="_blank" class="text-sm text-slate-400 hover:text-slate-600">
+                GitHub 源码 ↗
+            </a>
+        </div>
+    </header>
 
-    <!-- 以后有新工具，就复制一份上面的 div 改改名字和链接就行 -->
+    <!-- 主要内容区 -->
+    <main class="max-w-5xl mx-auto px-6 py-12">
+        
+        <!-- 介绍语 -->
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-slate-800 mb-4">简单，极致，安全</h2>
+            <p class="text-slate-500 max-w-2xl mx-auto">
+                这里的所有工具都基于 <strong>单页 HTML 哲学</strong> 构建。<br>
+                无需服务器，无需安装，所有数据均在您的浏览器本地处理，隐私绝对安全。
+            </p>
+        </div>
+
+        <!-- 工具卡片网格 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <!-- 工具 1：PDF 压缩 -->
+            <a href="compress.html" class="glass-card rounded-2xl p-6 group cursor-pointer block no-underline">
+                <div class="bg-blue-100 w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                    📄
+                </div>
+                <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-blue-600">PDF 压缩工具</h3>
+                <p class="text-sm text-slate-500 leading-relaxed">
+                    纯前端离线压缩 PDF 文件体积。将文档转为图像格式，大幅减小体积，适合归档与传输。
+                </p>
+            </a>
+
+            <!-- 工具 2：修图神器 -->
+            <a href="editor.html" class="glass-card rounded-2xl p-6 group cursor-pointer block no-underline">
+                <div class="bg-purple-100 w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                    🎨
+                </div>
+                <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-purple-600">极简修图神器</h3>
+                <p class="text-sm text-slate-500 leading-relaxed">
+                    浏览器里的“暗房”。提供风景、人像、胶片等大师级滤镜，支持亮度、对比度等精细微调。
+                </p>
+            </a>
+
+            <!-- 工具 3：密码生成器 (如果你之前建了mima.html，这个就能用，没建也没关系，点进去会404) -->
+            <a href="mima.html" class="glass-card rounded-2xl p-6 group cursor-pointer block no-underline opacity-70 hover:opacity-100">
+                <div class="bg-green-100 w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                    🔐
+                </div>
+                <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-green-600">强密码生成器</h3>
+                <p class="text-sm text-slate-500 leading-relaxed">
+                    本地随机生成高强度密码。支持自定义长度、字符组合，一键复制，彻底告别弱密码。
+                </p>
+            </a>
+
+            <!-- 预留位：未来新工具 -->
+            <div class="border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center text-slate-400 min-h-[200px]">
+                <div class="text-3xl mb-2">✨</div>
+                <p class="text-sm">更多 AI 工具开发中...</p>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 底部版权 -->
+    <footer class="text-center py-8 text-slate-400 text-sm">
+        <p>&copy; 2025 My AI Toolbox. Hosted on GitHub Pages.</p>
+    </footer>
 
 </body>
 </html>
