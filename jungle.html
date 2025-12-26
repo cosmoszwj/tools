@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>经典斗兽棋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { touch-action: manipulation; user-select: none; }
+        /* 棋盘格子布局 */
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            gap: 2px;
+            background-color: #5D4037; /* 边框色 */
+            border: 4px solid #5D4037;
+            width: 100%;
+            max-width: 450px;
+            aspect-ratio: 7/9;
+        }
+        .cell {
+            background-color: #DEB887; /* 土地颜色 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            position: relative;
+            cursor: pointer;
+        }
+        /* 地形样式 */
+        .river { background-color: #4FC3F7; }
+        .trap { background-color: #D7CCC8; border: 1px dashed #8D6E63; }
+        .den { background-color: #FFECB3; font-weight: bold; font-size: 0.8rem; color: #5D4037; }
+        
+        /* 棋子样式 */
+        .piece {
+            width: 85%;
+            height: 85%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 10;
+            transition: transform 0.2s;
+        }
+        .piece.red { background: linear-gradient(135deg, #FFEBEE, #FFCDD2); border: 2px solid #D32F2F; color: #B71C1C; }
+        .piece.blue { background: linear-gradient(135deg, #E3F2FD, #BBDEFB); border: 2px solid #1976D2; color: #0D47A1; }
+        
+        .selected { transform: scale(1.15); box-shadow: 0 0 15px yellow; z-index: 20; }
+        .valid-move::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: rgba(0, 255, 0, 0.6);
+            border-radius: 50%;
+            z-index: 5;
+        }
+        .last-move { background-color: rgba(255, 255, 0, 0.3) !important; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="flex flex-col items-center w-full max-w-lg gap-4">
+        
+        <!-- 头部信息 -->
+        <div class="flex justify-between w-full items-center bg-white p-3 rounded-xl shadow-sm">
+            <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded-full bg-red-600"></span>
+                <span class="font-bold text-slate-700">玩家 (红)</span>
+            </div>
+            <div id="status" class="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded">
+                轮到玩家走棋
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-500">电脑 (蓝)</span>
+                <span class="w-4 h-4 rounded-full bg-blue-600"></span>
+            </div>
+        </div>
+
+        <!-- 棋盘 -->
+        <div id="board" class="board-grid rounded shadow-2xl">
+            <!-- JS 生成格子 -->
+        </div>
+
+        <!-- 底部控制 -->
+        <div class="flex gap-4 w-full">
+            <button onclick="initGame()" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 rounded-xl shadow transition">
+                ♻️ 重新开始
+            </button>
+            <div class="bg-white p-3 rounded-xl shadow text-xs text-slate-500 flex-1">
+                规则提示：<br>
+                🐘>🦁>🐯>🐆>🐺>🐕>🐈>🐀<br>
+                ⚠️ 唯一特例：🐀 可以吃 🐘
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 游戏配置 ---
+        const ROW = 9;
+        const COL = 7;
+        const RED = 1;  // 玩家
+        const BLUE = -1; // 电脑
+        
+        // 棋子定义 (等级 8-1)
+        const PIECES = {
+            8: { name: '🐘', rank: 8 },
+            7: { name: '🦁', rank: 7 },
+            6: { name: '🐯', rank: 6 },
+            5: { name: '🐆', rank: 5 },
+            4: { name: '🐺', rank: 4 },
+            3: { name: '🐕', rank: 3 },
+            2: { name: '🐈', rank: 2 },
+            1: { name: '🐀', rank: 1 }
+        };
+
+        // 地形定义
+        // 0:空地, 1:河, 2:红陷阱, 3:蓝陷阱, 4:红穴, 5:蓝穴
+        const MAP = [
+            [0, 2, 5, 2, 0, 0, 0], // 0 (蓝方老家)
+            [0, 0, 2, 0, 0, 0
