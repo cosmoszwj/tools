@@ -122,4 +122,317 @@
         // 0:空地, 1:河, 2:红陷阱, 3:蓝陷阱, 4:红穴, 5:蓝穴
         const MAP = [
             [0, 2, 5, 2, 0, 0, 0], // 0 (蓝方老家)
-            [0, 0, 2, 0, 0, 0
+            [0, 0, 2, 0, 0, 0, 0], // 1
+            [0, 0, 0, 0, 0, 0, 0], // 2
+            [0, 1, 1, 0, 1, 1, 0], // 3 (河)
+            [0, 1, 1, 0, 1, 1, 0], // 4 (河)
+            [0, 1, 1, 0, 1, 1, 0], // 5 (河)
+            [0, 0, 0, 0, 0, 0, 0], // 6
+            [0, 0, 3, 0, 0, 0, 0], // 7
+            [0, 0, 0, 3, 4, 3, 0]  // 8 (红方老家)
+        ];
+
+        // 初始布局
+        const INIT_LAYOUT = [
+            {r:0, c:0, rank:7, team:BLUE}, {r:0, c:6, rank:6, team:BLUE},
+            {r:1, c:1, rank:3, team:BLUE}, {r:1, c:5, rank:2, team:BLUE},
+            {r:2, c:0, rank:1, team:BLUE}, {r:2, c:2, rank:5, team:BLUE}, {r:2, c:4, rank:4, team:BLUE}, {r:2, c:6, rank:8, team:BLUE},
+            
+            {r:8, c:6, rank:7, team:RED}, {r:8, c:0, rank:6, team:RED},
+            {r:7, c:5, rank:3, team:RED}, {r:7, c:1, rank:2, team:RED},
+            {r:6, c:6, rank:1, team:RED}, {r:6, c:4, rank:5, team:RED}, {r:6, c:2, rank:4, team:RED}, {r:6, c:0, rank:8, team:RED}
+        ];
+
+        let boardState = []; // 存储棋子
+        let turn = RED;
+        let selectedPiece = null; // 当前选中的棋子 {r, c}
+        let gameOver = false;
+        let lastMove = null; // 记录最后一步高亮
+
+        const boardEl = document.getElementById('board');
+        const statusEl = document.getElementById('status');
+
+        function initGame() {
+            // 初始化空棋盘
+            boardState = Array(ROW).fill(null).map(() => Array(COL).fill(null));
+            
+            // 放置棋子
+            INIT_LAYOUT.forEach(p => {
+                boardState[p.r][p.c] = { rank: p.rank, team: p.team };
+            });
+
+            turn = RED;
+            gameOver = false;
+            selectedPiece = null;
+            lastMove = null;
+            renderBoard();
+            statusEl.innerText = "轮到玩家 (红方) 走棋";
+        }
+
+        // 渲染棋盘
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            
+            for(let r=0; r<ROW; r++) {
+                for(let c=0; c<COL; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    
+                    // 设置地形样式
+                    const terrain = MAP[r][c];
+                    if(terrain === 1) cell.classList.add('river');
+                    if(terrain === 2 || terrain === 3) cell.classList.add('trap');
+                    if(terrain === 4) { cell.classList.add('den'); cell.innerText = "穴"; }
+                    if(terrain === 5) { cell.classList.add('den'); cell.innerText = "穴"; }
+
+                    // 高亮最后一步
+                    if(lastMove && ( (lastMove.from.r === r && lastMove.from.c === c) || (lastMove.to.r === r && lastMove.to.c === c) )) {
+                        cell.classList.add('last-move');
+                    }
+
+                    // 放置棋子
+                    const piece = boardState[r][c];
+                    if(piece) {
+                        const pDiv = document.createElement('div');
+                        pDiv.className = `piece ${piece.team === RED ? 'red' : 'blue'}`;
+                        pDiv.innerText = PIECES[piece.rank].name;
+                        
+                        // 选中高亮
+                        if(selectedPiece && selectedPiece.r === r && selectedPiece.c === c) {
+                            pDiv.classList.add('selected');
+                        }
+                        cell.appendChild(pDiv);
+                    }
+
+                    // 绑定点击
+                    cell.onclick = () => handleCellClick(r, c);
+                    
+                    // 显示可走提示
+                    if(selectedPiece && isValidMove(selectedPiece.r, selectedPiece.c, r, c)) {
+                        cell.classList.add('valid-move');
+                    }
+
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        // 点击逻辑
+        function handleCellClick(r, c) {
+            if(gameOver || turn !== RED) return;
+
+            const clickedPiece = boardState[r][c];
+
+            // 1. 点击自己的棋子 -> 选中
+            if(clickedPiece && clickedPiece.team === turn) {
+                selectedPiece = {r, c};
+                renderBoard();
+                return;
+            }
+
+            // 2. 点击空地或敌人 -> 尝试移动
+            if(selectedPiece) {
+                if(isValidMove(selectedPiece.r, selectedPiece.c, r, c)) {
+                    movePiece(selectedPiece.r, selectedPiece.c, r, c);
+                    // 轮到电脑
+                    if(!gameOver) {
+                        statusEl.innerText = "电脑思考中...";
+                        setTimeout(aiMove, 500);
+                    }
+                } else {
+                    // 如果点到了不能走的地方，取消选中
+                    selectedPiece = null;
+                    renderBoard();
+                }
+            }
+        }
+
+        // 核心规则：判断是否合法移动
+        function isValidMove(r1, c1, r2, c2) {
+            const p = boardState[r1][c1];
+            if(!p) return false;
+            
+            const target = boardState[r2][c2];
+            const terrain1 = MAP[r1][c1];
+            const terrain2 = MAP[r2][c2];
+
+            // 不能吃自己人
+            if(target && target.team === p.team) return false;
+
+            // 不能进自己的巢穴
+            if(p.team === RED && terrain2 === 4) return false;
+            if(p.team === BLUE && terrain2 === 5) return false;
+
+            const dr = Math.abs(r1 - r2);
+            const dc = Math.abs(c1 - c2);
+
+            // 普通移动：只能走一格 (上下左右)
+            if(dr + dc !== 1) {
+                // 特殊：狮虎跳河
+                if((p.rank === 7 || p.rank === 6) && terrain1 !== 1) {
+                    // 必须横跨或纵跨河流
+                    // 纵向跳 (河宽3)
+                    if(dc === 0 && Math.abs(r1 - r2) === 4) {
+                        // 检查中间有没有老鼠
+                        let hasRat = false;
+                        for(let i=1; i<4; i++) {
+                            const mr = Math.min(r1, r2) + i;
+                            const mp = boardState[mr][c1];
+                            if(mp) hasRat = true;
+                        }
+                        // 目标必须是岸边
+                        if(!hasRat && (MAP[r1+ (r2-r1)/4][c1] === 1)) return checkEat(p, target, r2, c2);
+                    }
+                    // 横向跳 (河宽2)
+                    if(dr === 0 && Math.abs(c1 - c2) === 3) {
+                         let hasRat = false;
+                        for(let i=1; i<3; i++) {
+                            const mc = Math.min(c1, c2) + i;
+                            const mp = boardState[r1][mc];
+                            if(mp) hasRat = true;
+                        }
+                        if(!hasRat && (MAP[r1][c1 + (c2-c1)/3] === 1)) return checkEat(p, target, r2, c2);
+                    }
+                }
+                return false;
+            }
+
+            // 老鼠进河
+            if(terrain2 === 1 && p.rank !== 1) return false; // 只有老鼠能进河
+
+            // 老鼠在河里不能吃岸上的
+            if(terrain1 === 1 && terrain2 !== 1 && target) return false;
+            
+            // 老鼠在岸上不能吃河里的 (除非目标也是老鼠)
+            if(terrain1 !== 1 && terrain2 === 1 && target) return false;
+
+            return checkEat(p, target, r2, c2);
+        }
+
+        // 吃子规则判断
+        function checkEat(attacker, defender, r2, c2) {
+            if(!defender) return true; // 目标为空，直接走
+
+            // 陷阱规则：敌人在我的陷阱里，此时防御力为0，谁都能吃
+            const inTrap = (defender.team === RED && MAP[r2][c2] === 3) || 
+                           (defender.team === BLUE && MAP[r2][c2] === 2);
+            if(inTrap) return true;
+
+            // 特例：老鼠吃大象
+            if(attacker.rank === 1 && defender.rank === 8) return true;
+            // 特例：大象不能吃老鼠
+            if(attacker.rank === 8 && defender.rank === 1) return false;
+
+            // 正常：大吃小
+            return attacker.rank >= defender.rank;
+        }
+
+        function movePiece(r1, c1, r2, c2) {
+            const p = boardState[r1][c1];
+            const dead = boardState[r2][c2];
+            
+            // 移动
+            boardState[r2][c2] = p;
+            boardState[r1][c1] = null;
+            
+            lastMove = { from: {r:r1, c:c1}, to: {r:r2, c:c2} };
+            selectedPiece = null;
+
+            // 判断胜利
+            // 1. 进了对方巢穴
+            if(p.team === RED && MAP[r2][c2] === 5) endGame(RED);
+            else if(p.team === BLUE && MAP[r2][c2] === 4) endGame(BLUE);
+            // 2. 对方无子可走 (简化为被吃光)
+            else if(dead) {
+                // 检查是否还有棋子
+                let redCnt = 0, blueCnt = 0;
+                boardState.flat().forEach(px => {
+                    if(px) px.team === RED ? redCnt++ : blueCnt++;
+                });
+                if(redCnt === 0) endGame(BLUE);
+                if(blueCnt === 0) endGame(RED);
+            }
+
+            if(!gameOver) {
+                turn = turn === RED ? BLUE : RED;
+                renderBoard();
+                if(turn === RED) statusEl.innerText = "轮到玩家 (红方)";
+                else statusEl.innerText = "电脑 (蓝方) 正在思考...";
+            }
+        }
+
+        function endGame(winner) {
+            gameOver = true;
+            renderBoard();
+            if(winner === RED) statusEl.innerText = "🎉 恭喜！玩家获胜！";
+            else statusEl.innerText = "💀 电脑获胜，再接再厉！";
+        }
+
+        // --- 简单 AI ---
+        function aiMove() {
+            if(gameOver) return;
+            
+            let allMoves = [];
+            // 1. 遍历所有蓝方棋子
+            for(let r=0; r<ROW; r++) {
+                for(let c=0; c<COL; c++) {
+                    const p = boardState[r][c];
+                    if(p && p.team === BLUE) {
+                        // 2. 尝试上下左右移动
+                        const dirs = [[0,1], [0,-1], [1,0], [-1,0]]; // 基础移动
+                        // 加上狮虎跳河的检测点 (简化版，直接遍历全图判断合法性)
+                        // 为了性能，这里我们简单点，只检测周围和跳跃
+                        
+                        // 暴力扫描全图可能的目标点 (对于7x9不大)
+                        for(let tr=0; tr<ROW; tr++) {
+                            for(let tc=0; tc<COL; tc++) {
+                                if(isValidMove(r, c, tr, tc)) {
+                                    allMoves.push({ from: {r,c}, to: {tr,tc}, score: 0 });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if(allMoves.length === 0) {
+                endGame(RED);
+                return;
+            }
+
+            // 3. 评分策略
+            allMoves.forEach(m => {
+                const target = boardState[m.to.tr][m.to.tc];
+                // 吃子得分
+                if(target) {
+                    m.score += target.rank * 10;
+                    if(target.rank === 8) m.score += 50; // 吃大象加分
+                }
+                
+                // 进攻得分 (距离红方兽穴越近分越高)
+                // 红方兽穴在 (8, 3) 附近
+                const distToDen = Math.abs(m.to.tr - 8) + Math.abs(m.to.tc - 3);
+                m.score -= distToDen; // 距离越小分越高 (负数绝对值小)
+
+                // 进老窝直接赢
+                if(MAP[m.to.tr][m.to.tc] === 4) m.score += 1000;
+
+                // 随机扰动，避免死板
+                m.score += Math.random() * 2;
+            });
+
+            // 4. 排序取最好
+            allMoves.sort((a, b) => b.score - a.score);
+            
+            // 5. 执行
+            // 稍微有点概率选第二好的，防止死循环 (90%选最好的)
+            const pick = (allMoves.length > 1 && Math.random() > 0.9) ? allMoves[1] : allMoves[0];
+            
+            movePiece(pick.from.r, pick.from.c, pick.to.tr, pick.to.tc);
+        }
+
+        initGame();
+
+    </script>
+</body>
+</html>
