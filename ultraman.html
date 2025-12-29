@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>奥特曼光之图鉴</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+        }
+        .ultra-gradient {
+            background: linear-gradient(135deg, #FF4B4B 0%, #E63946 100%);
+        }
+        /* 模态框动画 */
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-700 pb-20">
+
+    <!-- 顶部导航 -->
+    <nav class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition">
+                <span>←</span> 返回工具箱
+            </a>
+            <h1 class="font-bold text-xl text-red-600">ULTRAMAN ARCHIVES</h1>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-8 space-y-12">
+        
+        <!-- 第一部分：创造背景与历史 -->
+        <section class="bg-white rounded-2xl p-8 shadow-sm border-l-4 border-red-500">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🎥</span> 创造背景与历史
+            </h2>
+            <div class="prose text-slate-600 leading-relaxed">
+                <p class="mb-4">
+                    奥特曼系列（Ultraman Series）是日本特摄之神<strong>圆谷英二</strong>导演创立的圆谷制作公司（Tsuburaya Productions）所拍摄的电视特摄剧集。
+                </p>
+                <p>
+                    这一切始于1966年的《奥特Q》，紧随其后的是初代《奥特曼》，它首次确立了“巨大英雄与怪兽作战”的模式。当时正值冷战与太空竞赛时期，人们对于宇宙、科学以及未知的力量充满了幻想。圆谷英二将好莱坞级别的特效技术引入电视荧幕，创造了这一跨越半个多世纪的传奇IP。
+                </p>
+            </div>
+        </section>
+
+        <!-- 第二部分：故事背景 -->
+        <section class="bg-white rounded-2xl p-8 shadow-sm border-l-4 border-blue-500">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🌌</span> 宇宙警备队传说
+            </h2>
+            <div class="prose text-slate-600 leading-relaxed">
+                <p class="mb-4">
+                    在距离地球300万光年的彼方，有一个M78星云，那是<strong>“光之国”</strong>的所在地。这里的居民曾经和人类一样，但因为母星太阳的毁灭，科学家们建造了等离子火花塔。在人造太阳光线的照射下，居民们进化成了拥有强大力量的超人——奥特曼。
+                </p>
+                <p>
+                    为了维护全宇宙的和平，保护弱小的星球免受怪兽和邪恶宇宙人的侵略，奥特之父建立了<strong>“宇宙警备队”</strong>。他们一代又一代地派遣战士前往地球，与人类建立羁绊，共同对抗黑暗。
+                </p>
+            </div>
+        </section>
+
+        <!-- 第三部分：奥特曼图鉴 -->
+        <section>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">英雄图鉴</h2>
+                <!-- 筛选标签 -->
+                <div class="flex gap-2 text-sm bg-white p-1 rounded-lg shadow-sm">
+                    <button onclick="filterEra('all')" class="px-3 py-1 rounded-md bg-slate-100 hover:bg-slate-200 active-tab font-medium transition" id="btn-all">全部</button>
+                    <button onclick="filterEra('showa')" class="px-3 py-1 rounded-md hover:bg-slate-100 transition text-slate-500" id="btn-showa">昭和</button>
+                    <button onclick="filterEra('heisei')" class="px-3 py-1 rounded-md hover:bg-slate-100 transition text-slate-500" id="btn-heisei">平成</button>
+                    <button onclick="filterEra('reiwa')" class="px-3 py-1 rounded-md hover:bg-slate-100 transition text-slate-500" id="btn-reiwa">令和</button>
+                </div>
+            </div>
+
+            <!-- 图鉴网格 -->
+            <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- JS将自动填充这里 -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 详情弹窗 (Modal) -->
+    <div id="modal" class="fixed inset-0 z-50 hidden">
+        <!-- 背景遮罩 -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal()"></div>
+        <!-- 内容卡片 -->
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300 relative modal-content flex flex-col md:flex-row max-h-[90vh]">
+                
+                <button onclick="closeModal()" class="absolute top-4 right-4 z-10 w-8 h-8 bg-black/20 hover:bg-black/40 text-white rounded-full flex items-center justify-center transition">✕</button>
+
+                <!-- 图片区域 -->
+                <div class="w-full md:w-1/2 bg-slate-200 h-64 md:h-auto flex items-center justify-center overflow-hidden relative">
+                    <img id="modal-img" src="" alt="" class="w-full h-full object-cover">
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                        <span id="modal-era" class="text-xs font-bold text-white bg-red-600 px-2 py-1 rounded inline-block mb-1"></span>
+                    </div>
+                </div>
+
+                <!-- 文字区域 -->
+                <div class="w-full md:w-1/2 p-6 overflow-y-auto">
+                    <h3 id="modal-title" class="text-3xl font-bold text-slate-800 mb-2"></h3>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">身份背景</h4>
+                            <p id="modal-subtitle" class="text-sm font-semibold text-blue-600"></p>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">必杀技</h4>
+                            <p id="modal-skill" class="text-slate-700"></p>
+                        </div>
+                        <div class="border-t pt-4">
+                            <p id="modal-desc" class="text-slate-600 text-sm leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === 数据源 ===
+        // 这里为了演示，图片使用了占位图服务。你可以后续把图片换成你仓库里的真实链接。
+        const ultramanData = [
+            // 昭和系
+            {
+                id: 1, name: "初代奥特曼", era: "showa", 
+                title: "起源的巨人", skill: "斯派修姆光线",
+                img: "https://placehold.co/400x600/e63946/white?text=Ultraman",
+                desc: "来自M78星云光之国的宇宙警备队队员。在追击宇宙怪兽百慕拉时误伤了科学特搜队的早田进队员，为了挽救他的生命与其合为一体。他是最早来到地球的奥特战士，确立了必杀光线解决怪兽的经典模式。"
+            },
+            {
+                id: 2, name: "奥特赛文", era: "showa", 
+                title: "红色的恒星观测员", skill: "集束射线 / 冰斧",
+                img: "https://placehold.co/400x600/d62828/white?text=Seven",
+                desc: "M78星云340号恒星观测员。因为被地球人的勇气感动，化身为诸星团留在地球。他没有时间限制（但在受损严重时除外），擅长使用头顶的冰斧进行战斗，是赛罗奥特曼的父亲。"
+            },
+            {
+                id: 3, name: "泰罗奥特曼", era: "showa", 
+                title: "光之国皇太子", skill: "斯特利姆光线",
+                img: "https://placehold.co/400x600/fca311/white?text=Taro",
+                desc: "奥特之父与奥特之母的亲生儿子，光之国的皇太子。在地球上与东光太郎一心同体。他的综合实力在奥特兄弟中名列前茅，后来成为了光之国宇宙警备队的总教官。"
+            },
+            // 平成系
+            {
+                id: 4, name: "迪迦奥特曼", era: "heisei", 
+                title: "超古代之光", skill: "哉佩利敖光线",
+                img: "https://placehold.co/400x600/8338ec/white?text=Tiga",
+                desc: "平成系的第一位奥特曼。他不是来自M78星云，而是3000万年前保护地球的超古代巨人。原本是黑暗巨人，后来弃暗投明。具有“形态转换”能力（复合、强力、空中），是无数人心中的那道光。"
+            },
+            {
+                id: 5, name: "戴拿奥特曼", era: "heisei", 
+                title: "奇迹之光", skill: "索尔捷特光线",
+                img: "https://placehold.co/400x600/3a86ff/white?text=Dyna",
+                desc: "在火星上出现的神秘之光，与超级胜利队的飞鸟信合体。延续了迪迦的世界观，象征着人类向宇宙进发的进取精神。最终在战斗中消失在黑洞彼方，成为了穿越时空的旅行者。"
+            },
+            {
+                id: 6, name: "盖亚奥特曼", era: "heisei", 
+                title: "大地之意", skill: "光子冰刀",
+                img: "https://placehold.co/400x600/ef233c/white?text=Gaia",
+                desc: "代表“大地”意志的奥特曼。不同于以往的附身模式，是由高山我梦通过实验捕获大地的光而诞生。出场时落地的震撼特效被称为“满分落地”。与代表海洋意志的阿古茹奥特曼既是对手也是战友。"
+            },
+            {
+                id: 7, name: "梦比优斯", era: "heisei", 
+                title: "未来的战士", skill: "梦比姆射线",
+                img: "https://placehold.co/400x600/fb8500/white?text=Mebius",
+                desc: "宇宙警备队的新人，受奥特之父派遣来到地球。他在地球上化身为日比野未来，与GUYS队员们建立了深厚的友谊。他是连接昭和与平成世界观的重要纽带。"
+            },
+            // 令和系
+            {
+                id: 8, name: "泽塔奥特曼", era: "reiwa", 
+                title: "热血徒弟", skill: "泽斯帝姆光线",
+                img: "https://placehold.co/400x600/00b4d8/white?text=Z",
+                desc: "赛罗奥特曼的自称徒弟，性格热血憨厚，使用奥特勋章进行变身。虽然一开始是个半吊子，但在地球的战斗中逐渐成长为一名独当一面的奥特战士。他的口头禅是“Ultra High！”"
+            },
+            {
+                id: 9, name: "布莱泽奥特曼", era: "reiwa", 
+                title: "原始的猎手", skill: "螺旋光矛",
+                img: "https://placehold.co/400x600/023e8a/white?text=Blazar",
+                desc: "来自M421天体的光之巨人。通过特殊的“人体描边”方式变身。他的战斗风格充满了原始和野性，像一个狩猎怪兽的猎人。不会说人类语言，只会发出独特的吼叫声，与弦人队长有着独特的共生关系。"
+            }
+        ];
+
+        // === 逻辑控制 ===
+        const grid = document.getElementById('gallery-grid');
+        const modal = document.getElementById('modal');
+        const modalContent = document.querySelector('.modal-content');
+
+        // 渲染卡片
+        function renderCards(filter = 'all') {
+            grid.innerHTML = '';
+            
+            // 更新按钮状态
+            document.querySelectorAll('button[id^="btn-"]').forEach(btn => {
+                if(btn.id === `btn-${filter}`) {
+                    btn.classList.add('bg-slate-800', 'text-white');
+                    btn.classList.remove('bg-slate-100', 'text-slate-500');
+                } else {
+                    btn.classList.remove('bg-slate-800', 'text-white');
+                    btn.classList.add('bg-slate-100', 'text-slate-500');
+                }
+            });
+
+            const filteredData = filter === 'all' 
+                ? ultramanData 
+                : ultramanData.filter(u => u.era === filter);
+
+            filteredData.forEach(ultra => {
+                const card = document.createElement('div');
+                card.className = 'glass-card rounded-xl overflow-hidden cursor-pointer group';
+                card.onclick = () => openModal(ultra);
+                
+                // 简单的颜色映射
+                let eraColor = ultra.era === 'showa' ? 'bg-amber-500' : (ultra.era === 'heisei' ? 'bg-purple-500' : 'bg-blue-500');
+                let eraText = ultra.era === 'showa' ? '昭和' : (ultra.era === 'heisei' ? '平成' : '令和');
+
+                card.innerHTML = `
+                    <div class="h-48 overflow-hidden relative bg-gray-200">
+                        <img src="${ultra.img}" alt="${ultra.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute top-2 right-2 ${eraColor} text-white text-xs font-bold px-2 py-1 rounded shadow-md">
+                            ${eraText}
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg text-slate-800">${ultra.name}</h3>
+                        <p class="text-xs text-slate-500 mt-1 truncate">${ultra.title}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 打开模态框
+        function openModal(ultra) {
+            document.getElementById('modal-img').src = ultra.img;
+            document.getElementById('modal-title').innerText = ultra.name;
+            document.getElementById('modal-subtitle').innerText = ultra.title;
+            document.getElementById('modal-skill').innerText = ultra.skill;
+            document.getElementById('modal-desc').innerText = ultra.desc;
+            
+            let eraText = ultra.era === 'showa' ? '昭和系' : (ultra.era === 'heisei' ? '平成系' : '令和系');
+            document.getElementById('modal-era').innerText = eraText;
+
+            modal.classList.remove('hidden');
+            // 强制重绘以触发动画
+            setTimeout(() => {
+                modal.querySelector('.bg-black\\/60').classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            modal.querySelector('.bg-black\\/60').classList.add('opacity-0');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // 初始化
+        renderCards('all');
+
+    </script>
+</body>
+</html>
