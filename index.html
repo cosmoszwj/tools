@@ -3,225 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工具箱 - 纯前端 PDF 压缩</title>
-    <!-- 引入 Tailwind CSS 用于美观 -->
+    <title>我的个人工具箱</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入 PDF 处理库 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         .glass {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            transition: all 0.3s ease;
         }
-        .loader {
-            border-top-color: #3B82F6;
-            -webkit-animation: spinner 1.5s linear infinite;
-            animation: spinner 1.5s linear infinite;
-        }
-        @keyframes spinner {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4 text-slate-700 relative">
+<body class="bg-gradient-to-br from-slate-50 to-blue-100 min-h-screen p-6 md:p-12 text-slate-800">
 
-    <!-- ================= 新增：顶部悬浮导航 ================= -->
-    <div class="absolute top-4 right-4 md:top-8 md:right-8 flex gap-3 z-50">
-        <a href="radar.html" class="glass px-4 py-2 rounded-full text-sm font-bold text-blue-600 hover:text-blue-800 hover:scale-105 transition-all flex items-center gap-2 shadow-sm cursor-pointer">
-            <span class="text-lg">📈</span> 
-            <span>强趋势指标看板</span>
-        </a>
-    </div>
-    <!-- ====================================================== -->
+    <div class="max-w-5xl mx-auto">
+        <!-- 头部 -->
+        <header class="text-center mb-16">
+            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-4">
+                个人导航工具箱
+            </h1>
+            <p class="text-slate-500 text-lg font-light">高效 · 纯前端 · 隐私安全</p>
+        </header>
 
-    <div class="glass rounded-2xl p-8 max-w-lg w-full transition-all duration-300 mt-12 md:mt-0">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold mb-2 text-slate-800">PDF 压缩工具</h1>
-            <p class="text-sm text-slate-500">纯本地处理，文件不会上传服务器</p>
-        </div>
+        <!-- 工具网格 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <!-- 工具 1：强趋势指标看板 -->
+            <a href="Binance_Radar.html" class="tool-card glass p-6 rounded-2xl flex flex-col items-center text-center group">
+                <div class="text-5xl mb-4 group-hover:scale-110 transition-transform">📈</div>
+                <h2 class="text-xl font-bold mb-2 text-slate-800">强趋势指标看板</h2>
+                <p class="text-sm text-slate-500 mb-4 text-balance">实时监控币安市场强弱趋势，快速捕捉交易信号。</p>
+                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">进入工具 →</span>
+            </a>
 
-        <!-- 上传区域 -->
-        <div id="dropZone" class="border-2 border-dashed border-blue-200 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors mb-6 group">
-            <input type="file" id="fileInput" accept="application/pdf" class="hidden">
-            <div class="text-blue-400 mb-3 group-hover:scale-110 transition-transform text-4xl">📄</div>
-            <p class="font-medium text-slate-600">点击选择 PDF 文件</p>
-            <p class="text-xs text-slate-400 mt-1">或将文件拖放到这里</p>
-        </div>
+            <!-- 工具 2：PDF 压缩工具 -->
+            <a href="pdf-compressor.html" class="tool-card glass p-6 rounded-2xl flex flex-col items-center text-center group">
+                <div class="text-5xl mb-4 group-hover:scale-110 transition-transform">📄</div>
+                <h2 class="text-xl font-bold mb-2 text-slate-800">PDF 压缩工具</h2>
+                <p class="text-sm text-slate-500 mb-4 text-balance">纯本地处理，不上传服务器，保护隐私的 PDF 压缩方案。</p>
+                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">进入工具 →</span>
+            </a>
 
-        <!-- 文件信息 & 选项 -->
-        <div id="optionsPanel" class="hidden space-y-5">
-            <div class="bg-white rounded-lg p-3 text-sm flex justify-between items-center shadow-sm">
-                <span id="fileName" class="truncate max-w-[200px] font-medium"></span>
-                <span id="fileSize" class="text-slate-400 text-xs"></span>
+            <!-- 工具 3：占位符 (未来可添加) -->
+            <div class="glass p-6 rounded-2xl flex flex-col items-center justify-center text-center border-dashed border-2 border-slate-300 opacity-60">
+                <div class="text-5xl mb-4">➕</div>
+                <h2 class="text-xl font-bold mb-2 text-slate-400">敬请期待</h2>
+                <p class="text-sm text-slate-400">正在开发更多实用小工具...</p>
             </div>
 
-            <div>
-                <div class="flex justify-between mb-2">
-                    <label class="text-sm font-semibold">压缩强度 (图片质量)</label>
-                    <span id="qualityVal" class="text-sm text-blue-600 font-bold">50%</span>
-                </div>
-                <input type="range" id="qualityRange" min="0.1" max="0.9" step="0.1" value="0.5" 
-                    class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-500">
-                <p class="text-xs text-orange-500 mt-1">* 注意：此工具会将页面转为图片，文字将不可复制。</p>
-            </div>
-
-            <button id="compressBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-95 flex justify-center items-center gap-2">
-                <span>开始压缩</span>
-            </button>
         </div>
 
-        <!-- 进度条 -->
-        <div id="progressPanel" class="hidden mt-6 text-center">
-            <div class="w-10 h-10 border-4 border-blue-100 rounded-full loader mx-auto mb-3"></div>
-            <p id="statusText" class="text-sm font-medium animate-pulse">正在处理第 1 页...</p>
-        </div>
-
-        <!-- 结果 -->
-        <div id="resultPanel" class="hidden mt-6 text-center space-y-4">
-            <div class="bg-green-50 text-green-700 p-4 rounded-xl border border-green-200">
-                <p class="font-bold text-lg">🎉 压缩完成！</p>
-                <p class="text-sm mt-1">新文件大小: <span id="newSize" class="font-mono"></span></p>
-                <p class="text-xs text-green-600 mt-1">体积减少了 <span id="savePercent" class="font-bold"></span></p>
-            </div>
-            <button id="downloadBtn" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl shadow-lg transition-all">
-                下载压缩后的文件
-            </button>
-            <button onclick="location.reload()" class="text-xs text-slate-400 underline hover:text-slate-600">处理另一个文件</button>
-        </div>
+        <!-- 页脚 -->
+        <footer class="mt-24 text-center text-slate-400 text-xs">
+            <p>© 2024 我的工具箱 · 基于 GitHub Pages 托管</p>
+        </footer>
     </div>
 
-    <script>
-        // 设置 PDF.js Worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        const { jsPDF } = window.jspdf;
-
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('fileInput');
-        const optionsPanel = document.getElementById('optionsPanel');
-        const progressPanel = document.getElementById('progressPanel');
-        const resultPanel = document.getElementById('resultPanel');
-        const compressBtn = document.getElementById('compressBtn');
-        const qualityRange = document.getElementById('qualityRange');
-        const qualityVal = document.getElementById('qualityVal');
-        
-        let originalFile = null;
-        let compressedPdfBlob = null;
-
-        // 拖拽事件
-        dropZone.addEventListener('click', () => fileInput.click());
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-400'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-blue-400'));
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-blue-400');
-            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-        });
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) handleFile(e.target.files[0]);
-        });
-
-        // 质量滑块联动
-        qualityRange.addEventListener('input', (e) => {
-            qualityVal.innerText = Math.round(e.target.value * 100) + '%';
-        });
-
-        function formatBytes(bytes, decimals = 2) {
-            if (!+bytes) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(decimals))} ${sizes[i]}`;
-        }
-
-        function handleFile(file) {
-            if (file.type !== 'application/pdf') return alert('请选择 PDF 文件');
-            originalFile = file;
-            
-            document.getElementById('fileName').innerText = file.name;
-            document.getElementById('fileSize').innerText = formatBytes(file.size);
-            
-            dropZone.classList.add('hidden');
-            optionsPanel.classList.remove('hidden');
-        }
-
-        compressBtn.addEventListener('click', async () => {
-            optionsPanel.classList.add('hidden');
-            progressPanel.classList.remove('hidden');
-
-            try {
-                const arrayBuffer = await originalFile.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                const totalPages = pdf.numPages;
-                
-                // 初始化 jsPDF
-                const newPdf = new jsPDF({
-                    orientation: 'p',
-                    unit: 'mm',
-                    format: 'a4',
-                    compress: true
-                });
-
-                const quality = parseFloat(qualityRange.value);
-
-                for (let i = 1; i <= totalPages; i++) {
-                    document.getElementById('statusText').innerText = `正在处理第 ${i} / ${totalPages} 页...`;
-
-                    const page = await pdf.getPage(i);
-                    // 2倍缩放以保证基本清晰度，然后通过JPEG压缩降低体积
-                    const viewport = page.getViewport({ scale: 2 }); 
-                    
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-
-                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-
-                    // 核心压缩逻辑：转为 JPEG
-                    const imgData = canvas.toDataURL('image/jpeg', quality);
-
-                    const imgProps = newPdf.getImageProperties(imgData);
-                    const pdfWidth = newPdf.internal.pageSize.getWidth();
-                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-                    if (i > 1) newPdf.addPage();
-                    newPdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-                }
-
-                document.getElementById('statusText').innerText = '正在打包文件...';
-                compressedPdfBlob = newPdf.output('blob');
-
-                showResult();
-
-            } catch (err) {
-                console.error(err);
-                alert('处理失败，可能是文件已加密或过大。');
-                location.reload();
-            }
-        });
-
-        function showResult() {
-            progressPanel.classList.add('hidden');
-            resultPanel.classList.remove('hidden');
-            
-            document.getElementById('newSize').innerText = formatBytes(compressedPdfBlob.size);
-            const saved = ((originalFile.size - compressedPdfBlob.size) / originalFile.size * 100).toFixed(1);
-            document.getElementById('savePercent').innerText = saved > 0 ? `${saved}%` : '0% (似乎已经很小了)';
-
-            document.getElementById('downloadBtn').onclick = () => {
-                const url = URL.createObjectURL(compressedPdfBlob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `compressed_${originalFile.name}`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            };
-        }
-    </script>
 </body>
 </html>
