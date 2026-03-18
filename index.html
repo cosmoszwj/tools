@@ -3,63 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的个人工具箱</title>
+    <title>Cosmoszwj 的个人工具箱</title>
+    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* 玻璃拟态效果 */
         .glass {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        /* 悬浮动画 */
         .tool-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.15);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        /* 渐变背景 */
+        body {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+            min-height: 100 screen;
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 to-blue-100 min-h-screen p-6 md:p-12 text-slate-800">
+<body class="p-6 md:p-12 text-slate-800">
 
-    <div class="max-w-5xl mx-auto">
-        <!-- 头部 -->
+    <div class="max-w-6xl mx-auto">
+        <!-- 头部标题 -->
         <header class="text-center mb-16">
-            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-4">
-                个人导航工具箱
+            <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-4">
+                Cosmoszwj Toolbox
             </h1>
-            <p class="text-slate-500 text-lg font-light">高效 · 纯前端 · 隐私安全</p>
+            <p class="text-slate-500 text-lg font-light tracking-wide">纯前端 · 免安装 · 隐私安全</p>
+            <div class="h-1 w-20 bg-blue-500 mx-auto mt-6 rounded-full"></div>
         </header>
 
-        <!-- 工具网格 -->
+        <!-- 工具网格布局 -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
-            <!-- 工具 1：强趋势指标看板 -->
-            <a href="Binance_Radar.html" class="tool-card glass p-6 rounded-2xl flex flex-col items-center text-center group">
-                <div class="text-5xl mb-4 group-hover:scale-110 transition-transform">📈</div>
-                <h2 class="text-xl font-bold mb-2 text-slate-800">强趋势指标看板</h2>
-                <p class="text-sm text-slate-500 mb-4 text-balance">实时监控币安市场强弱趋势，快速捕捉交易信号。</p>
-                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">进入工具 →</span>
+            <!-- 核心工具：强趋势指标看板 (对应 Binance_Radar.html) -->
+            <a href="Binance_Radar.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group">
+                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">📈</div>
+                <h2 class="text-xl font-bold mb-3 text-slate-800">强趋势指标看板</h2>
+                <p class="text-sm text-slate-500 mb-6 leading-relaxed">实时监控币安市场强弱趋势，快速捕捉交易信号（2MB 离线版）。</p>
+                <span class="mt-auto px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg shadow-blue-200 group-hover:bg-blue-700 transition-colors">立即进入</span>
             </a>
 
-            <!-- 工具 2：PDF 压缩工具 -->
-            <a href="pdf-compressor.html" class="tool-card glass p-6 rounded-2xl flex flex-col items-center text-center group">
-                <div class="text-5xl mb-4 group-hover:scale-110 transition-transform">📄</div>
-                <h2 class="text-xl font-bold mb-2 text-slate-800">PDF 压缩工具</h2>
-                <p class="text-sm text-slate-500 mb-4 text-balance">纯本地处理，不上传服务器，保护隐私的 PDF 压缩方案。</p>
-                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">进入工具 →</span>
+            <!-- 工具：PDF 压缩 (对应 compress.html) -->
+            <a href="compress.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group border-2 border-transparent hover:border-blue-100">
+                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">📄</div>
+                <h2 class="text-xl font-bold mb-3 text-slate-800">PDF 压缩工具</h2>
+                <p class="text-sm text-slate-500 mb-6 leading-relaxed">纯浏览器本地处理，文件不经过服务器，安全极速。</p>
+                <span class="mt-auto px-6 py-2 bg-slate-800 text-white text-sm font-bold rounded-full transition-colors">开始使用</span>
             </a>
 
-            <!-- 工具 3：占位符 (未来可添加) -->
-            <div class="glass p-6 rounded-2xl flex flex-col items-center justify-center text-center border-dashed border-2 border-slate-300 opacity-60">
+            <!-- 工具：在线编辑器 (对应 editor.html) -->
+            <a href="editor.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group">
+                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">✍️</div>
+                <h2 class="text-xl font-bold mb-3 text-slate-800">轻量编辑器</h2>
+                <p class="text-sm text-slate-500 mb-6 leading-relaxed">随时随地记录代码片段或笔记，支持实时预览。</p>
+                <span class="mt-auto px-6 py-2 bg-slate-200 text-slate-600 text-sm font-bold rounded-full">点击打开</span>
+            </a>
+
+            <!-- 工具：五子棋游戏 (对应 gomoku.html) -->
+            <a href="gomoku.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group">
+                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">⚪</div>
+                <h2 class="text-xl font-bold mb-3 text-slate-800">五子棋对战</h2>
+                <p class="text-sm text-slate-500 mb-6 leading-relaxed">闲暇时间的简单策略游戏，支持单机对弈。</p>
+                <span class="mt-auto px-6 py-2 bg-slate-200 text-slate-600 text-sm font-bold rounded-full">开始游戏</span>
+            </a>
+
+            <!-- 工具：奥特曼页面 (对应 ultraman.html) -->
+            <a href="ultraman.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group">
+                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">🦸</div>
+                <h2 class="text-xl font-bold mb-3 text-slate-800">Ultraman 特辑</h2>
+                <p class="text-sm text-slate-500 mb-6 leading-relaxed">一个有趣的个性化展示页面。</p>
+                <span class="mt-auto px-6 py-2 bg-slate-200 text-slate-600 text-sm font-bold rounded-full">去看看</span>
+            </a>
+
+            <!-- 占位符：未来添加 -->
+            <div class="glass p-8 rounded-3xl flex flex-col items-center justify-center text-center border-dashed border-2 border-slate-300 opacity-60">
                 <div class="text-5xl mb-4">➕</div>
                 <h2 class="text-xl font-bold mb-2 text-slate-400">敬请期待</h2>
-                <p class="text-sm text-slate-400">正在开发更多实用小工具...</p>
+                <p class="text-sm text-slate-400">正在筹备更多有趣的小工具...</p>
             </div>
 
         </div>
 
         <!-- 页脚 -->
-        <footer class="mt-24 text-center text-slate-400 text-xs">
-            <p>© 2024 我的工具箱 · 基于 GitHub Pages 托管</p>
+        <footer class="mt-20 py-8 text-center text-slate-400">
+            <div class="flex justify-center gap-6 mb-4 text-sm font-medium">
+                <a href="https://github.com/cosmoszwj" target="_blank" class="hover:text-blue-500 transition-colors">GitHub</a>
+                <span>•</span>
+                <span class="text-slate-300">基于 GitHub Pages</span>
+            </div>
+            <p class="text-xs">© 2024 Cosmoszwj Tools Project. All Rights Reserved.</p>
         </footer>
     </div>
 
