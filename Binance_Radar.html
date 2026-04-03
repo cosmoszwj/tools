@@ -1,0 +1,374 @@
+html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>共振雷达-专业版 (单页面)</title>
+    <!-- 引入 ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        /* 全局样式 - 复刻 Streamlit 暗黑主题 */
+        body { margin: 0; padding: 15px; background-color: #161a1e; color: #EAECEF; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        /* 顶部导航容器 */
+        .top-nav {
+            background-color: #1e2329; padding: 12px 20px; border-radius: 8px; margin-bottom: 10px;
+            border-bottom: 1px solid #2b3139; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;
+        }
+        
+        .logo-text { color: #f0b90b; font-size: 20px; font-weight: bold; white-space: nowrap; }
+        .update-tag { font-size: 11px; color: #02c076; background-color: #2b3139; padding: 5px 10px; border-radius: 4px; margin-left: auto; }
+        
+        select, input[type="text"] {
+            background-color: #2b3139; border: 1px solid #474d57; color: white; height: 38px;
+            padding: 0 10px; border-radius: 4px; font-size: 14px; outline: none;
+        }
+        
+        /* 参数控制区 */
+        .controls-container {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;
+            background-color: #1e2329; padding: 15px 20px; border-radius: 8px; margin-bottom: 15px; border-bottom: 1px solid #2b3139;
+        }
+        
+        .control-item { display: flex; flex-direction: column; }
+        .control-item label { color: #848e9c; font-size: 12px; margin-bottom: 5px; }
+        .control-item input[type="range"] { width: 100%; accent-color: #f0b90b; }
+        .control-item .value-display { font-size: 12px; color: #EAECEF; margin-top: 2px; text-align: right; }
+        
+        .checkbox-container { display: flex; align-items: center; height: 100%; gap: 8px; margin-top: 15px; font-size: 14px; color: #848e9c; }
+        
+        #chart-container { width: 100%; height: 75vh; background-color: #161a1e; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 顶部导航 -->
+    <div class="top-nav">
+        <div class="logo-text">⚡ 共振 Pro 工作站</div>
+        <select id="interval-select">
+            <option value="15m">15m</option>
+            <option value="1h" selected>1h</option>
+            <option value="4h">4h</option>
+            <option value="1d">1d</option>
+        </select>
+        <input type="text" id="search-input" placeholder="🔍 搜索..." style="width: 150px;">
+        <select id="symbol-select">
+            <option value="NVDA">Nvidia (NVDA)</option>
+            <option value="AAPL">Apple (AAPL)</option>
+        </select>
+        <div class="update-tag" id="update-time">⏱️ 刚刚更新</div>
+    </div>
+
+    <!-- 2. 参数控制区 -->
+    <div class="controls-container">
+        <div class="control-item">
+            <label>收口门槛(%)</label>
+            <input type="range" id="p-bw" min="1.0" max="15.0" step="0.5">
+            <div class="value-display" id="val-bw"></div>
+        </div>
+        <div class="control-item">
+            <label>放量倍数</label>
+            <input type="range" id="p-vol" min="1.0" max="5.0" step="0.1">
+            <div class="value-display" id="val-vol"></div>
+        </div>
+        <div class="control-item">
+            <label>趋势要求(万分位)</label>
+            <input type="range" id="p-slope" min="0" max="30" step="1">
+            <div class="value-display" id="val-slope"></div>
+        </div>
+        <div class="control-item">
+            <div class="checkbox-container">
+                <input type="checkbox" id="p-flat-en" checked> 启用平坦过滤
+            </div>
+        </div>
+        <div class="control-item">
+            <label>平坦窗口(K线数)</label>
+            <input type="range" id="p-flat-win" min="3" max="10" step="1">
+            <div class="value-display" id="val-flat-win"></div>
+        </div>
+        <div class="control-item">
+            <label>平坦阈值(%)</label>
+            <input type="range" id="p-flat-thr" min="0.1" max="2.0" step="0.1">
+            <div class="value-display" id="val-flat-thr"></div>
+        </div>
+        <div class="control-item">
+            <label>止盈(%)</label>
+            <input type="range" id="p-tp" min="0.5" max="10.0" step="0.5" value="2.0">
+            <div class="value-display" id="val-tp">2.0%</div>
+        </div>
+        <div class="control-item">
+            <label>止损(%)</label>
+            <input type="range" id="p-sl" min="0.5" max="10.0" step="0.5" value="1.0">
+            <div class="value-display" id="val-sl">1.0%</div>
+        </div>
+    </div>
+
+    <!-- 3. 图表容器 -->
+    <div id="chart-container"></div>
+
+    <!-- 4. 核心逻辑脚本 -->
+    <script>
+        // ================= 配置字典 =================
+        const STRATEGY_CONFIG = {
+            "NVDA": { IN_BW: 5.0, IN_VOL_MULT: 1.5, IN_SLOPE_BASE: 2, FLAT_WINDOW: 3, FLAT_THRESHOLD: 0.1 },
+            "AAPL": { IN_BW: 6.0, IN_VOL_MULT: 1.2, IN_SLOPE_BASE: 2, FLAT_WINDOW: 5, FLAT_THRESHOLD: 0.2 }
+        };
+
+        let myChart = echarts.init(document.getElementById('chart-container'), 'dark');
+        let currentRawData = []; // 存放当前模拟的 K 线基础数据
+
+        // DOM 元素引用
+        const els = {
+            sym: document.getElementById('symbol-select'),
+            bw: document.getElementById('p-bw'), vol: document.getElementById('p-vol'), slope: document.getElementById('p-slope'),
+            flatEn: document.getElementById('p-flat-en'), flatWin: document.getElementById('p-flat-win'), flatThr: document.getElementById('p-flat-thr'),
+            tp: document.getElementById('p-tp'), sl: document.getElementById('p-sl')
+        };
+
+        // ================= 工具函数 (JS版 Pandas 指标计算) =================
+        function calcEMA(data, key, period) {
+            let k = 2 / (period + 1), emaArray = new Array(data.length).fill(0);
+            emaArray[0] = data[0][key];
+            for (let i = 1; i < data.length; i++) {
+                emaArray[i] = data[i][key] * k + emaArray[i - 1] * (1 - k);
+            }
+            return emaArray;
+        }
+
+        function calcBOLL(data, key, period = 50, multiplier = 2) {
+            let up = [], dn = [], sma = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) { up.push(null); dn.push(null); sma.push(null); continue; }
+                let slice = data.slice(i - period + 1, i + 1).map(d => d[key]);
+                let mean = slice.reduce((a, b) => a + b) / period;
+                let variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
+                let std = Math.sqrt(variance);
+                sma.push(mean); up.push(mean + std * multiplier); dn.push(mean - std * multiplier);
+            }
+            return { up, dn, sma };
+        }
+
+        // ================= 模拟数据生成 (由于没有后端 SQLite) =================
+        function generateMockData(symbol) {
+            let basePrice = symbol === 'NVDA' ? 800 : 170;
+            let data = [];
+            let now = new Date('2024-01-01T09:30:00');
+            
+            for (let i = 0; i < 300; i++) { // 生成 300 根 K 线
+                let open = basePrice;
+                let close = open * (1 + (Math.random() - 0.48) * 0.02); // 随机波动
+                let high = Math.max(open, close) * (1 + Math.random() * 0.01);
+                let low = Math.min(open, close) * (1 - Math.random() * 0.01);
+                let volume = Math.random() * 100000 + 50000;
+                // 偶尔制造放量
+                if (Math.random() > 0.9) volume *= 3; 
+
+                data.push({
+                    time_str: now.toISOString().replace('T', ' ').substring(0, 16),
+                    o: open, c: close, h: high, l: low, v: volume
+                });
+                basePrice = close;
+                now.setHours(now.getHours() + 1); // 1小时线
+            }
+            return data;
+        }
+
+        // ================= 核心策略与图表渲染逻辑 =================
+        function runStrategyAndRender() {
+            // 1. 获取当前参数
+            let p_bw = parseFloat(els.bw.value) / 100;
+            let p_vol = parseFloat(els.vol.value);
+            let p_slope = parseFloat(els.slope.value);
+            let p_flat_en = els.flatEn.checked;
+            let p_flat_win = parseInt(els.flatWin.value);
+            let p_flat_thr = parseFloat(els.flatThr.value) / 100;
+            let tpPct = parseFloat(els.tp.value) / 100;
+            let slPct = parseFloat(els.sl.value) / 100;
+
+            // 2. JS 计算技术指标
+            let data = JSON.parse(JSON.stringify(currentRawData)); // 深拷贝
+            let ema12 = calcEMA(data, 'c', 12);
+            let ema50 = calcEMA(data, 'c', 50);
+            let boll = calcBOLL(data, 'c', 50);
+            
+            // 计算 20均量线
+            let vma20 = calcEMA(data, 'v', 20);
+
+            for (let i = 0; i < data.length; i++) {
+                data[i].ema12 = ema12[i]; data[i].ema50 = ema50[i];
+                data[i].boll_up = boll.up[i]; data[i].boll_dn = boll.dn[i];
+                
+                // BW 收口率
+                data[i].bw = boll.sma[i] ? (boll.up[i] - boll.dn[i]) / boll.sma[i] : null;
+                // 斜率
+                data[i].ema50_slope = i > 0 && ema50[i-1] ? ((ema50[i] - ema50[i-1]) / ema50[i-1]) * 10000 : 0;
+                // 量比 (简化版最大量比)
+                data[i].v_ratio = vma20[i] ? data[i].v / vma20[i] : 1;
+                
+                // 平坦斜率 (基于 Boll)
+                if (i >= p_flat_win && boll.up[i - p_flat_win]) {
+                    data[i].upper_slope = ((boll.up[i] - boll.up[i - p_flat_win]) / boll.up[i - p_flat_win]) * 100;
+                    data[i].lower_slope = ((boll.dn[i] - boll.dn[i - p_flat_win]) / boll.dn[i - p_flat_win]) * 100;
+                }
+            }
+
+            // 3. 信号判定与回测标记
+            let marks = [];
+            for (let i = 2; i < data.length; i++) {
+                let d = data[i], prev = data[i-1];
+                if(!d.boll_up) continue;
+
+                // 条件
+                let is_gold = d.ema12 > d.ema50 && prev.ema12 <= prev.ema50;
+                let is_dead = d.ema12 < d.ema50 && prev.ema12 >= prev.ema50;
+                let sq = prev.bw <= p_bw;
+                let vol_ok = d.v_ratio >= p_vol; // 简化为当前量比
+                let slope_ok_b = d.ema50_slope >= p_slope;
+                let slope_ok_s = d.ema50_slope <= -p_slope;
+                
+                let flat_ok = true;
+                if (p_flat_en && prev.upper_slope !== undefined) {
+                    flat_ok = Math.abs(prev.upper_slope) <= (p_flat_thr*100) && Math.abs(prev.lower_slope) <= (p_flat_thr*100);
+                }
+
+                if (is_gold && sq && vol_ok && slope_ok_b && flat_ok) d.signal = 'BUY';
+                else if (is_dead && sq && vol_ok && slope_ok_s && flat_ok) d.signal = 'SELL';
+
+                // 如果产生信号，推算止盈止损标记
+                if (d.signal) {
+                    let isBuy = d.signal === 'BUY';
+                    let tp = isBuy ? d.c * (1 + tpPct) : d.c * (1 - tpPct);
+                    let sl = isBuy ? d.c * (1 - slPct) : d.c * (1 + slPct);
+                    
+                    let sigInfo = `量比:${d.v_ratio.toFixed(1)}x | BW:${(d.bw*100).toFixed(1)}%<br/>斜率:${d.ema50_slope.toFixed(1)}‱`;
+
+                    marks.push({
+                        coord: [d.time_str, isBuy ? d.l : d.h], symbol: 'rect', symbolSize: [36,18], symbolOffset: [0, isBuy ? 15 : -15],
+                        itemStyle: { color: isBuy ? '#00ffcc' : '#ff33cc' },
+                        label: { show: true, formatter: d.signal, color: '#000', fontWeight: 'bold', fontSize: 10 },
+                        info: sigInfo
+                    });
+
+                    // 扫描未来触发点
+                    for (let j = i + 1; j < data.length; j++) {
+                        let fCandle = data[j];
+                        let hitSL = isBuy ? fCandle.l <= sl : fCandle.h >= sl;
+                        let hitTP = isBuy ? fCandle.h >= tp : fCandle.l <= tp;
+
+                        if (hitSL || hitTP) {
+                            let exitLabel = hitSL ? 'SL' : 'TP';
+                            let exitColor = hitSL ? '#f84960' : '#02c076';
+                            let exitPrice = hitSL ? sl : tp;
+
+                            marks.push({
+                                coord:[fCandle.time_str, exitPrice], symbol: 'pin', symbolSize: 35,
+                                itemStyle: { color: exitColor },
+                                label: { show: true, formatter: exitLabel, color: '#fff', fontSize: 10, fontWeight: 'bold' },
+                                info: `开仓价: ${d.c.toFixed(2)}<br/>触发价: ${exitPrice.toFixed(2)}<br/>盈亏: ${hitSL ? '-' : '+'}${hitSL ? slPct*100 : tpPct*100}%`
+                            });
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 4. 渲染 ECharts
+            let dates = data.map(i => i.time_str);
+            let option = {
+                backgroundColor: '#161a1e', animation: false,
+                tooltip: {
+                    trigger: 'axis', axisPointer: { type: 'cross' },
+                    backgroundColor: 'rgba(30, 35, 41, 0.95)', borderColor: '#474d57', textStyle: { color: '#eee', fontSize: 12 },
+                    formatter: function (params) {
+                        if(!params.length) return '';
+                        let res = '<b>' + params[0].name + '</b><br/>';
+                        params.forEach(item => {
+                            if (item.componentType === 'markPoint') return;
+                            if (item.seriesName === 'K线') {
+                                res += `开:${item.value[1].toFixed(2)} 收:${item.value[2].toFixed(2)} 低:${item.value[3].toFixed(2)} 高:${item.value[4].toFixed(2)}<br/>`;
+                            }
+                        });
+                        return res;
+                    }
+                },
+                legend: {
+                    top: '1%', data:['K线', 'EMA12', 'EMA50', 'BOLL上', 'BOLL下'],
+                    textStyle: { color: '#848e9c' }
+                },
+                grid:[{ left: 50, right: 70, top: '10%', height: '60%' }, { left: 50, right: 70, top: '75%', height: '15%' }],
+                xAxis:[
+                    { type:'category', data: dates, axisLine: { lineStyle: { color: '#2b3139' } }, axisLabel: { show: false } },
+                    { type:'category', gridIndex: 1, data: dates, axisLine: { lineStyle: { color: '#2b3139' } }, axisLabel: { fontSize: 10, color: '#848e9c' } }
+                ],
+                yAxis:[
+                    { scale: true, position: 'right', splitLine: { lineStyle: { color: '#2b3139', type: 'dashed' } }, axisLabel: { color: '#848e9c' } },
+                    { scale: true, position: 'right', gridIndex: 1, splitLine: { show: false }, axisLabel: { show: false } }
+                ],
+                dataZoom:[{ type: 'inside', xAxisIndex:[0, 1] }, { type: 'slider', xAxisIndex: [0, 1], bottom: '5px', height: 25, borderColor: '#2b3139' }],
+                series:[
+                    {
+                        name: 'K线', type: 'candlestick', data: data.map(i=>[i.o, i.c, i.l, i.h]),
+                        itemStyle: { color: '#02c076', color0: '#f84960', borderColor: '#02c076', borderColor0: '#f84960' },
+                        markPoint: { data: marks, tooltip: { formatter: p => p.data.info } }
+                    },
+                    { name: 'EMA12', type: 'line', data: data.map(i=>i.ema12), showSymbol: false, lineStyle: { width: 1.5, color: '#f0b90b' } },
+                    { name: 'EMA50', type: 'line', data: data.map(i=>i.ema50), showSymbol: false, lineStyle: { width: 1.5, color: '#9262ff' } },
+                    { name: 'BOLL上', type: 'line', data: data.map(i=>i.boll_up), showSymbol: false, lineStyle: { width: 1, color: '#848e9c', type: 'dashed' } },
+                    { name: 'BOLL下', type: 'line', data: data.map(i=>i.boll_dn), showSymbol: false, lineStyle: { width: 1, color: '#848e9c', type: 'dashed' } },
+                    {
+                        name: '成交量', type: 'bar', xAxisIndex: 1, yAxisIndex: 1,
+                        data: data.map(i=>[i.time_str, i.v, i.o>i.c?-1:1]),
+                        itemStyle: { color: p => p.data[2]>0 ? '#02c076' : '#f84960' }
+                    }
+                ]
+            };
+            myChart.setOption(option);
+        }
+
+        // ================= 事件绑定与初始化 =================
+        function updateDisplayValues() {
+            document.getElementById('val-bw').innerText = els.bw.value + '%';
+            document.getElementById('val-vol').innerText = els.vol.value + 'x';
+            document.getElementById('val-slope').innerText = els.slope.value + '‱';
+            document.getElementById('val-flat-win').innerText = els.flatWin.value;
+            document.getElementById('val-flat-thr').innerText = els.flatThr.value + '%';
+            document.getElementById('val-tp').innerText = els.tp.value + '%';
+            document.getElementById('val-sl').innerText = els.sl.value + '%';
+            
+            // 禁用联动
+            els.flatWin.disabled = !els.flatEn.checked;
+            els.flatThr.disabled = !els.flatEn.checked;
+        }
+
+        function loadSymbolConfig(sym) {
+            let cfg = STRATEGY_CONFIG[sym];
+            els.bw.value = cfg.IN_BW;
+            els.vol.value = cfg.IN_VOL_MULT;
+            els.slope.value = cfg.IN_SLOPE_BASE;
+            els.flatWin.value = cfg.FLAT_WINDOW;
+            els.flatThr.value = cfg.FLAT_THRESHOLD;
+            
+            updateDisplayValues();
+            currentRawData = generateMockData(sym); // 切换币种时重新生成数据
+            runStrategyAndRender();
+        }
+
+        // 监听滑块变动实时渲染图表
+        Object.values(els).forEach(el => {
+            if(el.tagName === 'SELECT') return;
+            el.addEventListener('input', () => { updateDisplayValues(); runStrategyAndRender(); });
+        });
+
+        // 切换标的
+        els.sym.addEventListener('change', (e) => { loadSymbolConfig(e.target.value); });
+        document.getElementById('interval-select').addEventListener('change', runStrategyAndRender);
+
+        window.addEventListener('resize', () => myChart.resize());
+
+        // 初始化运行
+        loadSymbolConfig('NVDA');
+
+    </script>
+</body>
+</html>
