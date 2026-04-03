@@ -3,282 +3,498 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>极简修图神器</title>
+    <title>Lightroom Web Pro (白底版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .glass {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-        /* 自定义滑块样式 */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
+        body { background-color: #f3f4f6; color: #374151; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        /* 滚动条美化 (浅色模式) */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f3f4f6; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        /* 面板样式 */
+        .panel-bg { background-color: #ffffff; border-left: 1px solid #e5e7eb; }
+        .section-header { cursor: pointer; user-select: none; border-bottom: 1px solid #e5e7eb; background: #f9fafb; color: #111827; transition: background 0.2s;}
+        .section-header:hover { background: #f3f4f6; }
+        
+        /* 浅色模式极简滑块 */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 8px 0; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #e5e7eb; border-radius: 2px; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            background: #3B82F6;
-            cursor: pointer;
-            margin-top: -6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            height: 16px; width: 16px;
+            border-radius: 50%; background: #ffffff;
+            cursor: pointer; margin-top: -6px;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.1s, border-color 0.1s;
         }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #E2E8F0;
-            border-radius: 2px;
-        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); border-color: #9ca3af; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+        input[type=range]::-webkit-slider-thumb:active { background: #eff6ff; border-color: #3b82f6; }
+        
+        /* 色彩滑块特效（白底背景适配） */
+        .slider-temp::-webkit-slider-runnable-track { background: linear-gradient(to right, #3b82f6, #e5e7eb, #eab308); }
+        .slider-tint::-webkit-slider-runnable-track { background: linear-gradient(to right, #22c55e, #e5e7eb, #d946ef); }
+        
+        /* 🚀 颜色分级色相轨道：彩虹渐变，清晰显示颜色 */
+        .slider-hue::-webkit-slider-runnable-track { background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); }
+
+        .canvas-container { background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 20px 20px; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen p-4 md:p-8 text-slate-700 font-sans">
+<body class="h-screen w-screen overflow-hidden flex flex-col">
 
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row gap-6 h-[90vh]">
+    <!-- 顶部导航 -->
+    <header class="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
+        <div class="flex items-center gap-2">
+            <div class="text-blue-500 font-bold text-xl">Lr</div>
+            <span class="text-sm tracking-widest text-gray-500">WEB PRO</span>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="resetAll()" class="px-4 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 transition font-medium">复位所有设置</button>
+            <button onclick="downloadImage()" class="px-4 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 rounded text-white font-medium transition shadow">导出图片</button>
+        </div>
+    </header>
+
+    <!-- 主体区域 -->
+    <main class="flex flex-1 overflow-hidden">
         
-        <!-- 左侧：图片预览区 -->
-        <div class="flex-1 glass rounded-2xl p-4 flex items-center justify-center relative overflow-hidden bg-gray-50/50 border-2 border-dashed border-gray-300 transition-all" id="dropZone">
-            
-            <!-- 未上传时的提示 -->
-            <div id="uploadPrompt" class="text-center cursor-pointer">
-                <div class="text-5xl mb-4">🖼️</div>
-                <h3 class="text-xl font-bold mb-2">点击或拖拽上传照片</h3>
-                <p class="text-sm text-gray-400">支持 JPG, PNG, WebP (本地处理，不上传)</p>
+        <!-- 左侧：预览区 -->
+        <div class="flex-1 canvas-container flex items-center justify-center relative" id="dropZone">
+            <div id="uploadPrompt" class="text-center cursor-pointer p-10 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 hover:bg-white/50 transition">
+                <div class="text-4xl mb-4 text-gray-400">📥</div>
+                <h3 class="text-lg font-medium text-gray-700">点击或拖拽上传照片</h3>
+                <p class="text-xs text-gray-500 mt-2">支持高清大图，纯本地处理保障隐私</p>
                 <input type="file" id="fileInput" accept="image/*" class="hidden">
             </div>
-
-            <!-- 图片画布 -->
-            <canvas id="canvas" class="hidden max-w-full max-h-full object-contain shadow-2xl rounded-lg"></canvas>
             
-            <!-- 重置/下载按钮组 (图片加载后显示) -->
-            <div id="actionBtns" class="hidden absolute top-4 right-4 flex gap-2">
-                <button onclick="resetImage()" class="bg-white/80 hover:bg-white text-gray-700 px-3 py-1 rounded-lg text-sm font-medium shadow backdrop-blur transition">↺ 重置</button>
-                <button onclick="downloadImage()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm font-medium shadow transition">⬇ 下载</button>
+            <canvas id="displayCanvas" class="hidden max-w-full max-h-full object-contain drop-shadow-xl"></canvas>
+            
+            <!-- 加载状态 -->
+            <div id="loading" class="hidden absolute inset-0 bg-white/80 backdrop-blur flex items-center justify-center z-50">
+                <div class="text-blue-500 font-medium tracking-widest animate-pulse">渲染中...</div>
             </div>
         </div>
 
-        <!-- 右侧：控制台 -->
-        <div class="w-full md:w-80 glass rounded-2xl p-6 flex flex-col gap-6 overflow-y-auto hidden" id="controlsPanel">
+        <!-- 右侧：控制面板 -->
+        <div class="w-[340px] panel-bg flex flex-col h-full overflow-y-auto hidden z-10 shadow-xl" id="controlsPanel">
             
-            <div>
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <span>✨</span> 一键滤镜
-                </h2>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="applyPreset('landscape')" class="bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded-xl text-sm font-bold transition">🌲 风景大片</button>
-                    <button onclick="applyPreset('portrait')" class="bg-pink-100 hover:bg-pink-200 text-pink-700 py-2 rounded-xl text-sm font-bold transition">👩 人像柔美</button>
-                    <button onclick="applyPreset('architecture')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-xl text-sm font-bold transition">🏢 建筑质感</button>
-                    <button onclick="applyPreset('film')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 py-2 rounded-xl text-sm font-bold transition">🎞️ 复古胶片</button>
-                    <button onclick="applyPreset('bw')" class="bg-gray-800 hover:bg-black text-white py-2 rounded-xl text-sm font-bold transition col-span-2">⚫ 黑白艺术</button>
+            <!-- 直方图占位（美观装饰） -->
+            <div class="h-32 bg-white border-b border-gray-200 p-4 flex items-end gap-[1px]">
+                <!-- 生成一些随机柱子作为装饰 -->
+                <script>for(let i=0;i<60;i++) document.write(`<div class="flex-1 bg-gray-300/60 rounded-t" style="height:${Math.random()*100}%"></div>`);</script>
+            </div>
+
+            <!-- 1. 基本 (Basic) -->
+            <div class="accordion">
+                <div class="section-header px-4 py-3 flex justify-between items-center text-sm font-medium" onclick="toggleSec('sec-basic')">
+                    <span>基本</span> <span class="text-gray-400 text-xs">▼</span>
+                </div>
+                <div id="sec-basic" class="p-4 space-y-4">
+                    <!-- 色温/色调 -->
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-500 mb-1"><span>色温</span><span id="v-temp">0</span></div>
+                        <input type="range" class="slider-temp config" id="temp" min="-50" max="50" value="0">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-500 mb-1"><span>色调</span><span id="v-tint">0</span></div>
+                        <input type="range" class="slider-tint config" id="tint" min="-50" max="50" value="0">
+                    </div>
+                    <hr class="border-gray-200 my-2">
+                    <!-- 曝光/对比 -->
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-500 mb-1"><span>曝光度</span><span id="v-exp">0</span></div>
+                        <input type="range" class="config" id="exp" min="-100" max="100" value="0">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-500 mb-1"><span>对比度</span><span id="v-con">0</span></div>
+                        <input type="range" class="config" id="con" min="-50" max="50" value="0">
+                    </div>
+                    <!-- 高光/阴影 -->
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-500 mb-1"><span>高光</span><span id="v-hi">0</span></div>
+                        <input type="range" class="config" id="hi" min="-100" max="100" value="0">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-500 mb-1"><span>阴影</span><span id="v-sha">0</span></div>
+                        <input type="range" class="config" id="sha" min="-100" max="100" value="0">
+                    </div>
                 </div>
             </div>
 
-            <hr class="border-gray-200">
-
-            <div>
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <span>🎛️</span> 手动微调
-                </h2>
-                <div class="space-y-4">
-                    <!-- 亮度 -->
+            <!-- 2. 混色器 (HSL) -->
+            <div class="accordion">
+                <div class="section-header px-4 py-3 flex justify-between items-center text-sm font-medium border-t border-gray-200" onclick="toggleSec('sec-hsl')">
+                    <span>混色器 (HSL)</span> <span class="text-gray-400 text-xs">▼</span>
+                </div>
+                <div id="sec-hsl" class="p-4 space-y-4 hidden">
+                    <!-- 🚀 补齐六大色彩体系 -->
+                    <select id="hsl-color" class="w-full bg-white border border-gray-300 text-xs p-2 rounded text-gray-700 outline-none focus:border-blue-400 config shadow-sm">
+                        <option value="all">⭕ 整体全局 (All)</option>
+                        <option value="red">🔴 红色系 (Reds)</option>
+                        <option value="yellow">🟡 黄色系 (Yellows)</option>
+                        <option value="green">🟢 绿色系 (Greens)</option>
+                        <option value="cyan">💠 青色系 (Cyans)</option>
+                        <option value="blue">🔵 蓝色系 (Blues)</option>
+                        <option value="magenta">🟣 洋红/品红 (Magentas)</option>
+                    </select>
                     <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span>亮度 (Brightness)</span>
-                            <span id="val-brightness">100%</span>
-                        </div>
-                        <input type="range" id="brightness" min="0" max="200" value="100" oninput="updateFilter()">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1"><span>色相偏移</span><span id="v-hsl-h">0</span></div>
+                        <input type="range" class="config" id="hsl-h" min="-180" max="180" value="0">
                     </div>
-                    <!-- 对比度 -->
                     <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span>对比度 (Contrast)</span>
-                            <span id="val-contrast">100%</span>
-                        </div>
-                        <input type="range" id="contrast" min="0" max="200" value="100" oninput="updateFilter()">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1"><span>饱和度</span><span id="v-hsl-s">0</span></div>
+                        <input type="range" class="config" id="hsl-s" min="-100" max="100" value="0">
                     </div>
-                    <!-- 饱和度 -->
                     <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span>饱和度 (Saturate)</span>
-                            <span id="val-saturate">100%</span>
-                        </div>
-                        <input type="range" id="saturate" min="0" max="200" value="100" oninput="updateFilter()">
-                    </div>
-                    <!-- 色温/色相 -->
-                    <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span>色调偏移 (Hue)</span>
-                            <span id="val-hue">0deg</span>
-                        </div>
-                        <input type="range" id="hue" min="-180" max="180" value="0" oninput="updateFilter()">
-                    </div>
-                     <!-- 模糊 -->
-                     <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span>模糊/柔焦 (Blur)</span>
-                            <span id="val-blur">0px</span>
-                        </div>
-                        <input type="range" id="blur" min="0" max="10" step="0.5" value="0" oninput="updateFilter()">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1"><span>明亮度</span><span id="v-hsl-l">0</span></div>
+                        <input type="range" class="config" id="hsl-l" min="-50" max="50" value="0">
                     </div>
                 </div>
             </div>
+
+            <!-- 3. 颜色分级 (Color Grading) -->
+            <div class="accordion">
+                <div class="section-header px-4 py-3 flex justify-between items-center text-sm font-medium border-t border-gray-200" onclick="toggleSec('sec-grad')">
+                    <span>颜色分级 (分离色调)</span> <span class="text-gray-400 text-xs">▼</span>
+                </div>
+                <div id="sec-grad" class="p-4 space-y-4 hidden bg-gray-50/50">
+                    <p class="text-[10px] text-gray-500 mb-2">为高光或阴影注入特定氛围色彩，电影感核心。</p>
+                    
+                    <div class="p-3 bg-white rounded border border-gray-200 shadow-sm">
+                        <div class="text-xs font-bold text-gray-700 mb-3 flex items-center gap-1"><span class="text-[10px]">🌑</span> 阴影色调</div>
+                        <div class="flex justify-between text-[10px] text-gray-500 mb-1"><span>色相 (选颜色)</span><span id="v-cg-s-h">0</span></div>
+                        <!-- 🚀 彩虹轨道类名 -->
+                        <input type="range" class="config slider-hue" id="cg-s-h" min="0" max="360" value="0">
+                        <div class="flex justify-between text-[10px] text-gray-500 mb-1"><span>饱和度 (加浓度)</span><span id="v-cg-s-s">0</span></div>
+                        <input type="range" class="config" id="cg-s-s" min="0" max="100" value="0">
+                    </div>
+
+                    <div class="p-3 bg-white rounded border border-gray-200 shadow-sm">
+                        <div class="text-xs font-bold text-gray-700 mb-3 flex items-center gap-1"><span class="text-[10px]">🌕</span> 高光色调</div>
+                        <div class="flex justify-between text-[10px] text-gray-500 mb-1"><span>色相 (选颜色)</span><span id="v-cg-h-h">0</span></div>
+                        <!-- 🚀 彩虹轨道类名 -->
+                        <input type="range" class="config slider-hue" id="cg-h-h" min="0" max="360" value="0">
+                        <div class="flex justify-between text-[10px] text-gray-500 mb-1"><span>饱和度 (加浓度)</span><span id="v-cg-h-s">0</span></div>
+                        <input type="range" class="config" id="cg-h-s" min="0" max="100" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 效果与预设 -->
+            <div class="accordion">
+                <div class="section-header px-4 py-3 flex justify-between items-center text-sm font-medium border-t border-gray-200" onclick="toggleSec('sec-eff')">
+                    <span>效果与细节</span> <span class="text-gray-400 text-xs">▼</span>
+                </div>
+                <div id="sec-eff" class="p-4 space-y-4 hidden">
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-500 mb-1"><span>裁剪后暗角</span><span id="v-vig">0</span></div>
+                        <input type="range" class="config" id="vig" min="0" max="100" value="0">
+                    </div>
+                    <hr class="border-gray-200 my-3">
+                    <div class="text-xs text-gray-500 mb-2">一键预设 (Presets)</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="applyPreset('film')" class="py-1.5 bg-white hover:bg-gray-100 text-gray-700 text-xs rounded border border-gray-200 transition shadow-sm">🎞️ 复古胶片</button>
+                        <button onclick="applyPreset('tealorange')" class="py-1.5 bg-white hover:bg-gray-100 text-gray-700 text-xs rounded border border-gray-200 transition shadow-sm">🎬 青橙电影</button>
+                        <button onclick="applyPreset('bw')" class="py-1.5 bg-white hover:bg-gray-100 text-gray-700 text-xs rounded border border-gray-200 transition shadow-sm">⚫ 经典黑白</button>
+                        <button onclick="applyPreset('landscape')" class="py-1.5 bg-white hover:bg-gray-100 text-gray-700 text-xs rounded border border-gray-200 transition shadow-sm">🌲 风景增强</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="h-10 shrink-0"></div> <!-- 底部留白 -->
         </div>
-    </div>
+    </main>
 
     <script>
+        // DOM 元素
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const displayCanvas = document.getElementById('displayCanvas');
+        const ctx = displayCanvas.getContext('2d', { willReadFrequently: true });
         const controlsPanel = document.getElementById('controlsPanel');
         const uploadPrompt = document.getElementById('uploadPrompt');
-        const actionBtns = document.getElementById('actionBtns');
+        const loading = document.getElementById('loading');
 
+        // 核心数据
         let originalImage = new Image();
-        let fileName = 'edited-image.png';
+        let fileName = 'lr-export.jpg';
+        let originalImgData = null; 
+        let previewImgData = null;  
+        let workingCanvas = document.createElement('canvas'); 
+        let renderTimeout = null;
 
-        // 默认参数
-        let settings = {
-            brightness: 100,
-            contrast: 100,
-            saturate: 100,
-            hue: 0,
-            blur: 0,
-            sepia: 0,
-            grayscale: 0
-        };
+        // 手风琴交互
+        function toggleSec(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('hidden');
+        }
 
-        // 绑定上传事件
-        dropZone.onclick = () => fileInput.click();
+        // 上传逻辑
+        dropZone.onclick = (e) => { if(!originalImage.src) fileInput.click(); };
         fileInput.onchange = (e) => loadFile(e.target.files[0]);
-        
-        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('bg-blue-50', 'border-blue-400'); };
-        dropZone.ondragleave = () => { dropZone.classList.remove('bg-blue-50', 'border-blue-400'); };
-        dropZone.ondrop = (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('bg-blue-50', 'border-blue-400');
-            if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
-        };
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('bg-white/50'); };
+        dropZone.ondragleave = () => { dropZone.classList.remove('bg-white/50'); };
+        dropZone.ondrop = (e) => { e.preventDefault(); dropZone.classList.remove('bg-white/50'); if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]); };
 
         function loadFile(file) {
             if (!file) return;
             fileName = file.name;
+            loading.classList.remove('hidden');
             const reader = new FileReader();
             reader.onload = (e) => {
                 originalImage.src = e.target.result;
                 originalImage.onload = () => {
-                    // 初始化界面
-                    canvas.width = originalImage.width;
-                    canvas.height = originalImage.height;
-                    
+                    initCanvases();
                     uploadPrompt.classList.add('hidden');
-                    canvas.classList.remove('hidden');
-                    actionBtns.classList.remove('hidden');
+                    displayCanvas.classList.remove('hidden');
                     controlsPanel.classList.remove('hidden');
-                    dropZone.classList.remove('cursor-pointer', 'border-dashed'); // 移除拖拽样式以便看图
-                    dropZone.onclick = null; // 禁止点击重新上传防止误触
-
-                    render();
+                    dropZone.onclick = null; 
+                    loading.classList.add('hidden');
+                    requestRender();
                 }
             };
             reader.readAsDataURL(file);
         }
 
-        function updateFilter() {
-            settings.brightness = document.getElementById('brightness').value;
-            settings.contrast = document.getElementById('contrast').value;
-            settings.saturate = document.getElementById('saturate').value;
-            settings.hue = document.getElementById('hue').value;
-            settings.blur = document.getElementById('blur').value;
-
-            // 更新数值显示
-            document.getElementById('val-brightness').innerText = settings.brightness + '%';
-            document.getElementById('val-contrast').innerText = settings.contrast + '%';
-            document.getElementById('val-saturate').innerText = settings.saturate + '%';
-            document.getElementById('val-hue').innerText = settings.hue + 'deg';
-            document.getElementById('val-blur').innerText = settings.blur + 'px';
-
-            render();
-        }
-
-        function render() {
-            // 构建滤镜字符串
-            const filterString = `
-                brightness(${settings.brightness}%) 
-                contrast(${settings.contrast}%) 
-                saturate(${settings.saturate}%) 
-                hue-rotate(${settings.hue}deg) 
-                blur(${settings.blur}px)
-                sepia(${settings.sepia}%)
-                grayscale(${settings.grayscale}%)
-            `;
+        function initCanvases() {
+            const MAX_PREVIEW_SIZE = 1200; 
+            let scale = Math.min(1, MAX_PREVIEW_SIZE / Math.max(originalImage.width, originalImage.height));
             
-            ctx.filter = filterString;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+            let pw = Math.floor(originalImage.width * scale);
+            let ph = Math.floor(originalImage.height * scale);
+
+            displayCanvas.width = pw; displayCanvas.height = ph;
+            workingCanvas.width = pw; workingCanvas.height = ph;
+
+            const pCtx = workingCanvas.getContext('2d');
+            pCtx.drawImage(originalImage, 0, 0, pw, ph);
+            previewImgData = pCtx.getImageData(0, 0, pw, ph);
         }
 
-        // 预设逻辑
-        function applyPreset(type) {
-            resetSliders();
-            switch(type) {
-                case 'landscape': // 风景：高饱和，高对比
-                    setSlider('saturate', 150);
-                    setSlider('contrast', 120);
-                    break;
-                case 'portrait': // 人像：高亮度，低对比（柔和），微暖
-                    setSlider('brightness', 110);
-                    setSlider('contrast', 90);
-                    setSlider('saturate', 105);
-                    setSlider('blur', 0.5); // 0.5像素的模糊自带磨皮效果
-                    break;
-                case 'architecture': // 建筑：极高对比，低饱和（冷淡风）
-                    setSlider('contrast', 140);
-                    setSlider('saturate', 60);
-                    break;
-                case 'film': // 胶片：暖色，低对比
-                    settings.sepia = 30; // 特殊参数
-                    setSlider('contrast', 90);
-                    setSlider('brightness', 110);
-                    break;
-                case 'bw': // 黑白
-                    settings.grayscale = 100; // 特殊参数
-                    setSlider('contrast', 120); // 黑白需要高对比才好看
-                    break;
+        document.querySelectorAll('.config').forEach(el => {
+            el.addEventListener('input', (e) => {
+                let displayId = 'v-' + e.target.id;
+                if(document.getElementById(displayId)) document.getElementById(displayId).innerText = e.target.value;
+                requestRender();
+            });
+        });
+
+        function requestRender() {
+            if(renderTimeout) cancelAnimationFrame(renderTimeout);
+            renderTimeout = requestAnimationFrame(() => {
+                processEngine(previewImgData, displayCanvas.width, displayCanvas.height);
+            });
+        }
+
+        // --- 核心像素引擎 ---
+        function processEngine(sourceImgData, width, height) {
+            const val = id => parseFloat(document.getElementById(id).value);
+            
+            const temp = val('temp'); const tint = val('tint');
+            const exp = val('exp'); const con = val('con');
+            const hi = val('hi'); const sha = val('sha');
+            const vig = val('vig');
+
+            const hslTarget = document.getElementById('hsl-color').value;
+            const hslH = val('hsl-h'); const hslS = val('hsl-s'); const hslL = val('hsl-l');
+
+            const cgShadH = val('cg-s-h'); const cgShadS = val('cg-s-s') / 100;
+            const cgHighH = val('cg-h-h'); const cgHighS = val('cg-h-s') / 100; 
+            
+            const cgShadRGB = hslToRgb(cgShadH/360, 1, 0.5);
+            const cgHighRGB = hslToRgb(cgHighH/360, 1, 0.5);
+
+            const expFactor = Math.pow(2, exp / 50);
+            const conFactor = (259 * (con + 255)) / (255 * (259 - con));
+
+            let outData = new Uint8ClampedArray(sourceImgData.data.length);
+            let inData = sourceImgData.data;
+
+            for (let i = 0; i < inData.length; i += 4) {
+                let r = inData[i], g = inData[i+1], b = inData[i+2];
+
+                // 1. 基本调整
+                r += temp * 0.5; b -= temp * 0.5;
+                g += tint * 0.5;
+                r *= expFactor; g *= expFactor; b *= expFactor;
+
+                r = conFactor * (r - 128) + 128;
+                g = conFactor * (g - 128) + 128;
+                b = conFactor * (b - 128) + 128;
+                r = r<0?0:r>255?255:r; g = g<0?0:g>255?255:g; b = b<0?0:b>255?255:b;
+
+                let luma = (0.299*r + 0.587*g + 0.114*b);
+                if (luma > 128) {
+                    let mask = (luma - 128) / 127; 
+                    r += hi * mask; g += hi * mask; b += hi * mask;
+                } else {
+                    let mask = (128 - luma) / 128; 
+                    r += sha * mask; g += sha * mask; b += sha * mask;
+                }
+
+                // 2. 颜色分级
+                if (cgShadS > 0 || cgHighS > 0) {
+                    if (luma < 128 && cgShadS > 0) {
+                        let strength = ((128 - luma) / 128) * cgShadS;
+                        r = r * (1-strength) + cgShadRGB[0] * strength;
+                        g = g * (1-strength) + cgShadRGB[1] * strength;
+                        b = b * (1-strength) + cgShadRGB[2] * strength;
+                    }
+                    if (luma > 128 && cgHighS > 0) {
+                        let strength = ((luma - 128) / 127) * cgHighS;
+                        r = r * (1-strength) + cgHighRGB[0] * strength;
+                        g = g * (1-strength) + cgHighRGB[1] * strength;
+                        b = b * (1-strength) + cgHighRGB[2] * strength;
+                    }
+                }
+
+                // 3. 混色器 (HSL)
+                if (hslH !== 0 || hslS !== 0 || hslL !== 0) {
+                    let rNorm = r/255, gNorm = g/255, bNorm = b/255;
+                    let max = Math.max(rNorm, gNorm, bNorm), min = Math.min(rNorm, gNorm, bNorm);
+                    let h=0, s=0, l=(max+min)/2;
+                    let d = max - min;
+                    
+                    if (max !== min) {
+                        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                        switch(max) {
+                            case rNorm: h = (gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0); break;
+                            case gNorm: h = (bNorm - rNorm) / d + 2; break;
+                            case bNorm: h = (rNorm - gNorm) / d + 4; break;
+                        }
+                        h /= 6;
+                    }
+
+                    // 🚀 重写的颜色提取逻辑，支持 6 种颜色
+                    let hueDeg = h * 360;
+                    let match = false;
+                    if (hslTarget === 'all') match = true;
+                    else if (hslTarget === 'red' && (hueDeg <= 30 || hueDeg >= 330)) match = true;
+                    else if (hslTarget === 'yellow' && (hueDeg > 30 && hueDeg <= 90)) match = true;
+                    else if (hslTarget === 'green' && (hueDeg > 90 && hueDeg <= 150)) match = true;
+                    else if (hslTarget === 'cyan' && (hueDeg > 150 && hueDeg <= 210)) match = true;
+                    else if (hslTarget === 'blue' && (hueDeg > 210 && hueDeg <= 270)) match = true;
+                    else if (hslTarget === 'magenta' && (hueDeg > 270 && hueDeg < 330)) match = true;
+
+                    if (match) {
+                        h += hslH / 360;
+                        if (h > 1) h -= 1; if (h < 0) h += 1;
+                        s += hslS / 100;
+                        l += hslL / 100;
+                        s = s<0?0:s>1?1:s; l = l<0?0:l>1?1:l;
+                        
+                        let newRgb = hslToRgb(h, s, l);
+                        r = newRgb[0]; g = newRgb[1]; b = newRgb[2];
+                    }
+                }
+
+                outData[i] = r; outData[i+1] = g; outData[i+2] = b; outData[i+3] = 255;
             }
-            updateFilter();
+
+            let finalImgData = new ImageData(outData, width, height);
+            ctx.putImageData(finalImgData, 0, 0);
+
+            // 4. 暗角
+            if (vig > 0) {
+                ctx.globalCompositeOperation = 'multiply';
+                let gradient = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, Math.max(width, height) * 0.7);
+                gradient.addColorStop(0, 'rgba(0,0,0,0)');
+                gradient.addColorStop(0.5, 'rgba(0,0,0,0)');
+                gradient.addColorStop(1, `rgba(0,0,0,${vig/100})`);
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, width, height);
+                ctx.globalCompositeOperation = 'source-over'; 
+            }
         }
 
-        function setSlider(id, val) {
-            document.getElementById(id).value = val;
-            updateFilter(); // 触发更新
+        // 辅助：HSL 转 RGB
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) { r = g = b = l; } 
+            else {
+                const hue2rgb = (p, q, t) => {
+                    if(t < 0) t += 1; if(t > 1) t -= 1;
+                    if(t < 1/6) return p + (q - p) * 6 * t;
+                    if(t < 1/2) return q;
+                    if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                let p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return[Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
         }
 
-        function resetSliders() {
-            settings = { brightness: 100, contrast: 100, saturate: 100, hue: 0, blur: 0, sepia: 0, grayscale: 0 };
-            document.getElementById('brightness').value = 100;
-            document.getElementById('contrast').value = 100;
-            document.getElementById('saturate').value = 100;
-            document.getElementById('hue').value = 0;
-            document.getElementById('blur').value = 0;
-            updateFilter();
+        function applyPreset(name) {
+            resetAll();
+            const set = (id, val) => { 
+                document.getElementById(id).value = val; 
+                document.getElementById('v-'+id).innerText = val; 
+            };
+            
+            if(name === 'film') {
+                set('con', -15); set('hi', -20); set('sha', 30);
+                set('cg-s-h', 210); set('cg-s-s', 15); 
+                set('cg-h-h', 45); set('cg-h-s', 15);  
+                set('vig', 30);
+            } else if (name === 'tealorange') { 
+                set('temp', 10); set('con', 20);
+                document.getElementById('hsl-color').value = 'blue';
+                set('hsl-h', -30); set('hsl-s', -20); 
+                set('cg-s-h', 200); set('cg-s-s', 20); 
+                set('cg-h-h', 30); set('cg-h-s', 25);  
+            } else if (name === 'bw') {
+                document.getElementById('hsl-color').value = 'all';
+                set('hsl-s', -100); set('con', 30); set('hi', 10); set('sha', -10);
+            } else if (name === 'landscape') {
+                document.getElementById('hsl-color').value = 'green';
+                set('hsl-s', 30); set('hsl-l', -10); 
+                set('con', 15); set('sha', 20);
+            }
+            requestRender();
         }
 
-        function resetImage() {
-            resetSliders();
-            render();
+        function resetAll() {
+            document.querySelectorAll('.config').forEach(el => {
+                if(el.type === 'range') { el.value = 0; document.getElementById('v-'+el.id).innerText = 0; }
+                if(el.tagName === 'SELECT') el.value = 'all';
+            });
+            if(previewImgData) requestRender();
         }
 
         function downloadImage() {
-            const link = document.createElement('a');
-            link.download = 'fixed_' + fileName;
-            link.href = canvas.toDataURL('image/png', 1.0); // 导出最高质量
-            link.click();
+            if (!originalImage.src) return;
+            loading.classList.remove('hidden');
+            
+            setTimeout(() => {
+                const fullCanvas = document.createElement('canvas');
+                fullCanvas.width = originalImage.width; fullCanvas.height = originalImage.height;
+                const fCtx = fullCanvas.getContext('2d');
+                fCtx.drawImage(originalImage, 0, 0);
+                
+                const fullData = fCtx.getImageData(0, 0, fullCanvas.width, fullCanvas.height);
+                
+                const origW = displayCanvas.width, origH = displayCanvas.height;
+                displayCanvas.width = fullCanvas.width; displayCanvas.height = fullCanvas.height;
+                
+                processEngine(fullData, fullCanvas.width, fullCanvas.height);
+                
+                const link = document.createElement('a');
+                link.download = 'LR_' + fileName;
+                link.href = displayCanvas.toDataURL('image/jpeg', 0.95);
+                link.click();
+
+                displayCanvas.width = origW; displayCanvas.height = origH;
+                requestRender();
+                loading.classList.add('hidden');
+            }, 100);
         }
     </script>
 </body>
