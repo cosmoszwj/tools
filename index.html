@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -24,7 +25,7 @@
         /* 渐变背景 */
         body {
             background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
-            min-height: 100 screen;
+            min-height: 100vh; /* 修正了原本的 100 screen 为 100vh */
         }
     </style>
 </head>
@@ -43,7 +44,7 @@
         <!-- 工具网格布局 -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
-            <!-- 核心工具：强趋势指标看板 (对应 Binance_Radar.html) -->
+            <!-- 核心工具：强趋势指标看板 -->
             <a href="Binance_Radar.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group">
                 <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">📈</div>
                 <h2 class="text-xl font-bold mb-3 text-slate-800">强趋势指标看板</h2>
@@ -51,7 +52,7 @@
                 <span class="mt-auto px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg shadow-blue-200 group-hover:bg-blue-700 transition-colors">立即进入</span>
             </a>
 
-            <!-- 工具：PDF 压缩 (对应 compress.html) -->
+            <!-- 工具：PDF 压缩 -->
             <a href="compress.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group border-2 border-transparent hover:border-blue-100">
                 <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">📄</div>
                 <h2 class="text-xl font-bold mb-3 text-slate-800">PDF 压缩工具</h2>
@@ -59,28 +60,28 @@
                 <span class="mt-auto px-6 py-2 bg-slate-800 text-white text-sm font-bold rounded-full transition-colors">开始使用</span>
             </a>
 
-            <!-- 工具：修图神器 (对应 editor.html) -->
+            <!-- 【新增】工具：PDF 综合工具箱 (指向新写的页面) -->
+            <a href="pdf-tools.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group border-2 border-transparent hover:border-orange-100">
+                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">🧰</div>
+                <h2 class="text-xl font-bold mb-3 text-slate-800">PDF 综合工具箱</h2>
+                <p class="text-sm text-slate-500 mb-6 leading-relaxed">纯前端实现 PDF 合并、提取与内容涂改，100% 离线保护隐私。</p>
+                <span class="mt-auto px-6 py-2 bg-orange-500 text-white text-sm font-bold rounded-full shadow-lg shadow-orange-200 group-hover:bg-orange-600 transition-colors">立即使用</span>
+            </a>
+
+            <!-- 工具：修图神器 -->
             <a href="editor.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group">
                 <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">✍️</div>
                 <h2 class="text-xl font-bold mb-3 text-slate-800">轻量修图</h2>
                 <p class="text-sm text-slate-500 mb-6 leading-relaxed">随时随地修图，支持实时预览。</p>
-                <span class="mt-auto px-6 py-2 bg-slate-200 text-slate-600 text-sm font-bold rounded-full">点击打开</span>
+                <span class="mt-auto px-6 py-2 bg-slate-200 text-slate-600 text-sm font-bold rounded-full group-hover:bg-slate-300 transition-colors">点击打开</span>
             </a>
 
-            <!-- 工具：五子棋游戏 (对应 gomoku.html) -->
-            <a href="gomoku.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group">
-                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">⚪</div>
-                <h2 class="text-xl font-bold mb-3 text-slate-800">五子棋对战</h2>
-                <p class="text-sm text-slate-500 mb-6 leading-relaxed">闲暇时间的简单策略游戏，支持单机对弈。</p>
-                <span class="mt-auto px-6 py-2 bg-slate-200 text-slate-600 text-sm font-bold rounded-full">开始游戏</span>
-            </a>
-
-            <!-- 工具：奥特曼页面 (对应 ultraman.html) -->
+            <!-- 工具：奥特曼页面 -->
             <a href="ultraman.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group">
                 <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">🦸</div>
                 <h2 class="text-xl font-bold mb-3 text-slate-800">Ultraman 特辑</h2>
                 <p class="text-sm text-slate-500 mb-6 leading-relaxed">一个有趣的个性化展示页面。</p>
-                <span class="mt-auto px-6 py-2 bg-slate-200 text-slate-600 text-sm font-bold rounded-full">去看看</span>
+                <span class="mt-auto px-6 py-2 bg-slate-200 text-slate-600 text-sm font-bold rounded-full group-hover:bg-slate-300 transition-colors">去看看</span>
             </a>
 
             <!-- 占位符：未来添加 -->
