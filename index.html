@@ -1,108 +1,815 @@
-html
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmoszwj 的个人工具箱</title>
-    <!-- 引入 Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* 玻璃拟态效果 */
-        .glass {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        /* 悬浮动画 */
-        .tool-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.15);
-            background: rgba(255, 255, 255, 0.9);
-        }
-        /* 渐变背景 */
-        body {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
-            min-height: 100vh; /* 修正了原本的 100 screen 为 100vh */
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Don Glump: Heavy Evolution | @Elyziumaa</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background-color: #05010a;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #game-container {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      height: 100vh;
+      max-height: 840px;
+      background: radial-gradient(circle at 50% 15%, #220b3d, #030008 90%);
+      border: 2px solid #a855f7;
+      box-shadow: 0 0 40px rgba(168, 85, 247, 0.55);
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    /* Top Status HUD */
+    .hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: bold;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .hud-box {
+      background: rgba(18, 7, 36, 0.85);
+      padding: 5px 10px;
+      border-radius: 14px;
+      border: 1px solid #7c3aed;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      text-shadow: 0 0 8px #c084fc;
+    }
+    /* Rank Evolution Alert */
+    #rank-banner {
+      position: absolute;
+      top: 58px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.8);
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #facc15;
+      text-shadow: 0 0 16px #eab308;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 6;
+      white-space: nowrap;
+    }
+    #rank-banner.show {
+      opacity: 1;
+      transform: translateX(-50%) scale(1.1);
+    }
+    /* Modals */
+    .modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 1, 12, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      text-align: center;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+    .hidden {
+      display: none !important;
+    }
+    h1 {
+      font-size: 28px;
+      background: linear-gradient(135deg, #2dd4bf, #c084fc, #f43f5e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .btn {
+      background: linear-gradient(135deg, #7c3aed, #ec4899);
+      border: none;
+      color: white;
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 16px rgba(168, 85, 247, 0.6);
+      transition: all 0.2s;
+      margin: 6px;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 24px rgba(236, 72, 153, 0.9);
+    }
+    .rank-tag {
+      background: #1e1b4b;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid #6366f1;
+      margin: 3px;
+      font-size: 11px;
+      display: inline-block;
+      color: #a5b4fc;
+    }
+  </style>
 </head>
-<body class="p-6 md:p-12 text-slate-800">
+<body>
 
-    <div class="max-w-6xl mx-auto">
-        <!-- 头部标题 -->
-        <header class="text-center mb-16">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-4">
-                Cosmoszwj Toolbox
-            </h1>
-            <p class="text-slate-500 text-lg font-light tracking-wide">纯前端 · 免安装 · 隐私安全</p>
-            <div class="h-1 w-20 bg-blue-500 mx-auto mt-6 rounded-full"></div>
-        </header>
+<div id="game-container">
+  <canvas id="canvas"></canvas>
 
-        <!-- 工具网格布局 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
-            <!-- 核心工具：强趋势指标看板 -->
-            <a href="Binance_Radar.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group">
-                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">📈</div>
-                <h2 class="text-xl font-bold mb-3 text-slate-800">强趋势指标看板</h2>
-                <p class="text-sm text-slate-500 mb-6 leading-relaxed">实时监控市场强弱趋势，快速捕捉交易信号（2MB 离线版）。</p>
-                <span class="mt-auto px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-full shadow-lg shadow-blue-200 group-hover:bg-blue-700 transition-colors">立即进入</span>
-            </a>
+  <div class="hud">
+    <div class="hud-box">🏆 <span id="score">0</span></div>
+    <div class="hud-box">⚡ <span id="rank-display" style="color: #2dd4bf;">RANK I</span></div>
+    <div class="hud-box">🔫 <span id="weapon-display" style="color: #facc15;">CANNON</span></div>
+    <div class="hud-box">❤️ <span id="lives">3</span></div>
+  </div>
 
-            <!-- 工具：PDF 压缩 -->
-            <a href="compress.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group border-2 border-transparent hover:border-blue-100">
-                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">📄</div>
-                <h2 class="text-xl font-bold mb-3 text-slate-800">PDF 压缩工具</h2>
-                <p class="text-sm text-slate-500 mb-6 leading-relaxed">纯浏览器本地处理，文件不经过服务器，安全极速。</p>
-                <span class="mt-auto px-6 py-2 bg-slate-800 text-white text-sm font-bold rounded-full transition-colors">开始使用</span>
-            </a>
+  <div id="rank-banner">RANK UP!</div>
 
-            <!-- 【新增】工具：PDF 综合工具箱 (指向新写的页面) -->
-            <a href="pdf-tools.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group border-2 border-transparent hover:border-orange-100">
-                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">🧰</div>
-                <h2 class="text-xl font-bold mb-3 text-slate-800">PDF 综合工具箱</h2>
-                <p class="text-sm text-slate-500 mb-6 leading-relaxed">纯前端实现 PDF 合并、提取与内容涂改，100% 离线保护隐私。</p>
-                <span class="mt-auto px-6 py-2 bg-orange-500 text-white text-sm font-bold rounded-full shadow-lg shadow-orange-200 group-hover:bg-orange-600 transition-colors">立即使用</span>
-            </a>
-
-            <!-- 工具：修图神器 -->
-            <a href="editor.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group">
-                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">✍️</div>
-                <h2 class="text-xl font-bold mb-3 text-slate-800">轻量修图</h2>
-                <p class="text-sm text-slate-500 mb-6 leading-relaxed">随时随地修图，支持实时预览。</p>
-                <span class="mt-auto px-6 py-2 bg-slate-200 text-slate-600 text-sm font-bold rounded-full group-hover:bg-slate-300 transition-colors">点击打开</span>
-            </a>
-
-            <!-- 工具：奥特曼页面 -->
-            <a href="ultraman.html" class="tool-card glass p-8 rounded-3xl flex flex-col items-center text-center group">
-                <div class="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">🦸</div>
-                <h2 class="text-xl font-bold mb-3 text-slate-800">Ultraman 特辑</h2>
-                <p class="text-sm text-slate-500 mb-6 leading-relaxed">一个有趣的个性化展示页面。</p>
-                <span class="mt-auto px-6 py-2 bg-slate-200 text-slate-600 text-sm font-bold rounded-full group-hover:bg-slate-300 transition-colors">去看看</span>
-            </a>
-
-            <!-- 占位符：未来添加 -->
-            <div class="glass p-8 rounded-3xl flex flex-col items-center justify-center text-center border-dashed border-2 border-slate-300 opacity-60">
-                <div class="text-5xl mb-4">➕</div>
-                <h2 class="text-xl font-bold mb-2 text-slate-400">敬请期待</h2>
-                <p class="text-sm text-slate-400">正在筹备更多有趣的小工具...</p>
-            </div>
-
-        </div>
-
-        <!-- 页脚 -->
-        <footer class="mt-20 py-8 text-center text-slate-400">
-            <div class="flex justify-center gap-6 mb-4 text-sm font-medium">
-                <a href="https://github.com/cosmoszwj" target="_blank" class="hover:text-blue-500 transition-colors">GitHub</a>
-                <span>•</span>
-                <span class="text-slate-300">基于 GitHub Pages</span>
-            </div>
-            <p class="text-xs">© 2024 Cosmoszwj Tools Project. All Rights Reserved.</p>
-        </footer>
+  <!-- Start Screen -->
+  <div id="start-screen" class="modal">
+    <h1>Don Glump: Overkill</h1>
+    <p style="color:#c084fc; font-weight: bold;">Elyziuma Community Creative Challenge</p>
+    <p>Pilot <b>Don Glump</b> with heavy artillery! Score points to evolve your character from a lone street boss into an army with escort battle drones!</p>
+    
+    <div style="margin-bottom: 16px;">
+      <span class="rank-tag">400 pts: 4-Barrel Quad Cannon</span>
+      <span class="rank-tag">1200 pts: Dual Escort Drones</span>
+      <span class="rank-tag">2500 pts: 4 Drones + Bullet Storm</span>
     </div>
 
+    <div style="font-size: 12px; color: #2dd4bf; margin-bottom: 18px;">
+      🕹️ Drag/Touch to Move! High-velocity auto firing!
+    </div>
+    <button class="btn" id="start-btn">COMMENCE BARRAGE 🔥</button>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div id="gameover-screen" class="modal hidden">
+    <h1>BATTLE SUMMARY</h1>
+    <div style="background: rgba(45, 212, 191, 0.08); border: 1px dashed #2dd4bf; padding: 14px; border-radius: 12px; margin: 12px 0; width: 100%;">
+      <div id="final-stats" style="font-size: 20px; font-weight: bold; color: #f43f5e; margin: 6px 0;"></div>
+      <div id="final-rank" style="font-size: 14px; color: #2dd4bf; font-weight: bold;"></div>
+    </div>
+    <p>Share your highest destruction record with the @Elyziumaa community!</p>
+    <div>
+      <button class="btn" id="share-btn">POST SCORE TO X 🐦</button>
+      <button class="btn" style="background: #334155;" id="restart-btn">PLAY AGAIN 🔄</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // High-Energy Web Audio Synthesizer
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+
+    if (type === 'cannon') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.12);
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } else if (type === 'laser') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(900, now);
+      osc.frequency.linearRampToValueAtTime(100, now + 0.18);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+      osc.start(now);
+      osc.stop(now + 0.18);
+    } else if (type === 'rankup') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.linearRampToValueAtTime(950, now + 0.35);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else if (type === 'boom') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(120, now);
+      osc.frequency.exponentialRampToValueAtTime(20, now + 0.3);
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (type === 'powerup') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(450, now);
+      osc.frequency.exponentialRampToValueAtTime(1100, now + 0.16);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.16);
+      osc.start(now);
+      osc.stop(now + 0.16);
+    }
+  }
+
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const container = document.getElementById('game-container');
+
+  // Load custom image if available
+  const bossImg = new Image();
+  bossImg.src = 'boss.png';
+  let hasCustomImg = false;
+  bossImg.onload = () => { hasCustomImg = true; };
+
+  let width, height;
+  function resize() {
+    width = canvas.width = container.clientWidth;
+    height = canvas.height = container.clientHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Engine state
+  let gameRunning = false;
+  let score = 0;
+  let lives = 3;
+  let shakeTime = 0;
+
+  // Evolution Ranks:
+  // Rank 1 (0): Dual Heavy Cannon
+  // Rank 2 (400): Quad Cannon
+  // Rank 3 (1200): 2 Escort Drones + Dual Rockets
+  // Rank 4 (2500): 4 Escort Drones + Overkill Barrage
+  let rank = 1;
+  let currentWeapon = 'CANNON';
+  let weaponTimer = 0;
+
+  // Player
+  const player = {
+    x: width / 2,
+    y: height - 110,
+    w: 70,
+    h: 80,
+    targetX: width / 2,
+    targetY: height - 110,
+    fireCooldown: 0,
+    droneAngle: 0
+  };
+
+  let bullets = [];
+  let enemies = [];
+  let drops = [];
+  let particles = [];
+  let smokeParticles = [];
+  let shockwaves = [];
+
+  // Controls
+  function setTarget(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    player.targetX = clientX - rect.left;
+    player.targetY = clientY - rect.top;
+  }
+  canvas.addEventListener('mousemove', e => { if (gameRunning) setTarget(e.clientX, e.clientY); });
+  canvas.addEventListener('touchmove', e => {
+    if (gameRunning && e.touches[0]) setTarget(e.touches[0].clientX, e.touches[0].clientY);
+  });
+
+  function triggerRankBanner(text) {
+    const el = document.getElementById('rank-banner');
+    el.innerText = text;
+    el.classList.add('show');
+    playSound('rankup');
+    shakeTime = 12;
+    setTimeout(() => { el.classList.remove('show'); }, 1400);
+  }
+
+  // Check & upgrade player rank based on score
+  function checkRankProgression() {
+    let newRank = 1;
+    if (score >= 2500) newRank = 4;
+    else if (score >= 1200) newRank = 3;
+    else if (score >= 400) newRank = 2;
+
+    if (newRank > rank) {
+      rank = newRank;
+      lives = Math.min(lives + 1, 3); // Heal 1 heart upon evolving
+      if (rank === 2) triggerRankBanner("⚡ RANK II: QUAD CANNONS!");
+      else if (rank === 3) triggerRankBanner("👑 RANK III: ESCORT DRONES DEPLOYED!");
+      else if (rank === 4) triggerRankBanner("💥 RANK IV: OVERKILL BARRAGE!");
+    }
+  }
+
+  // Draw Fallback Boss
+  function drawFallbackBoss(x, y, w, h) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Body
+    ctx.fillStyle = '#1c727d';
+    ctx.beginPath();
+    ctx.ellipse(w/2, h/2 + 4, w*0.46, h*0.48, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Shirt & Tie
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(w*0.25, h*0.55); ctx.lineTo(w*0.5, h*0.75); ctx.lineTo(w*0.75, h*0.55);
+    ctx.fill();
+
+    ctx.fillStyle = '#0a0a0a';
+    ctx.beginPath();
+    ctx.moveTo(w*0.47, h*0.62); ctx.lineTo(w*0.53, h*0.62); ctx.lineTo(w*0.55, h*0.88);
+    ctx.lineTo(w*0.5, h*0.93); ctx.lineTo(w*0.45, h*0.88);
+    ctx.fill();
+
+    // Vest
+    ctx.fillStyle = '#48325a';
+    ctx.beginPath();
+    ctx.moveTo(w*0.15, h*0.65); ctx.lineTo(w*0.4, h*0.85); ctx.lineTo(w*0.18, h*0.98);
+    ctx.fill();
+    ctx.fillStyle = '#2c5359';
+    ctx.beginPath();
+    ctx.moveTo(w*0.85, h*0.65); ctx.lineTo(w*0.6, h*0.85); ctx.lineTo(w*0.82, h*0.98);
+    ctx.fill();
+
+    // Lips & Sunglasses
+    ctx.fillStyle = '#d9383a';
+    ctx.beginPath(); ctx.ellipse(w/2, h*0.42, w*0.26, h*0.07, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(w*0.2, h*0.26, w*0.25, h*0.12);
+    ctx.fillRect(w*0.55, h*0.26, w*0.25, h*0.12);
+    ctx.fillRect(w*0.42, h*0.28, w*0.16, h*0.04);
+
+    // Cigar with glowing flame
+    ctx.fillStyle = '#f8fafc'; ctx.fillRect(w*0.22, h*0.43, w*0.16, 4);
+    ctx.fillStyle = '#ef4444'; ctx.fillRect(w*0.2, h*0.43, 3, 4);
+
+    ctx.restore();
+  }
+
+  // Heavy Artillery Fire
+  function fireGuns() {
+    if (player.fireCooldown > 0) {
+      player.fireCooldown--;
+      return;
+    }
+
+    const px = player.x;
+    const py = player.y;
+
+    if (currentWeapon === 'CANNON') {
+      // Scale with Rank!
+      if (rank === 1) {
+        player.fireCooldown = 8;
+        bullets.push({ x: px - 18, y: py - 15, vx: 0, vy: -15, w: 12, h: 26, r: 10, type: 'cannon', color: '#2dd4bf', dmg: 2 });
+        bullets.push({ x: px + 18, y: py - 15, vx: 0, vy: -15, w: 12, h: 26, r: 10, type: 'cannon', color: '#2dd4bf', dmg: 2 });
+      } else if (rank === 2) {
+        // Quad Cannons!
+        player.fireCooldown = 7;
+        bullets.push({ x: px - 26, y: py - 10, vx: -1.2, vy: -16, w: 13, h: 28, r: 11, type: 'cannon', color: '#a855f7', dmg: 2 });
+        bullets.push({ x: px - 10, y: py - 18, vx: 0, vy: -17, w: 14, h: 30, r: 12, type: 'cannon', color: '#2dd4bf', dmg: 2.5 });
+        bullets.push({ x: px + 10, y: py - 18, vx: 0, vy: -17, w: 14, h: 30, r: 12, type: 'cannon', color: '#2dd4bf', dmg: 2.5 });
+        bullets.push({ x: px + 26, y: py - 10, vx: 1.2, vy: -16, w: 13, h: 28, r: 11, type: 'cannon', color: '#a855f7', dmg: 2 });
+      } else if (rank >= 3) {
+        // Quad + Homing Micro-Rockets from Drones!
+        player.fireCooldown = 6;
+        bullets.push({ x: px - 14, y: py - 18, vx: 0, vy: -18, w: 15, h: 32, r: 13, type: 'cannon', color: '#2dd4bf', dmg: 3 });
+        bullets.push({ x: px + 14, y: py - 18, vx: 0, vy: -18, w: 15, h: 32, r: 13, type: 'cannon', color: '#2dd4bf', dmg: 3 });
+        // Side Drone shots
+        bullets.push({ x: px - 48, y: py, vx: -2, vy: -15, w: 12, h: 24, r: 9, type: 'cannon', color: '#facc15', dmg: 2 });
+        bullets.push({ x: px + 48, y: py, vx: 2, vy: -15, w: 12, h: 24, r: 9, type: 'cannon', color: '#facc15', dmg: 2 });
+      }
+      playSound('cannon');
+    } else if (currentWeapon === 'SPREAD') {
+      // 9 to 11 Way Omega Spread
+      player.fireCooldown = 11;
+      const count = rank >= 3 ? 11 : 9;
+      const step = 0.8 / (count - 1);
+      for (let i = 0; i < count; i++) {
+        let angle = -0.4 + i * step;
+        bullets.push({
+          x: px, y: py - 15,
+          vx: Math.sin(angle) * 14,
+          vy: -Math.cos(angle) * 14,
+          w: 16, h: 16, r: 12,
+          type: 'spread',
+          color: '#f43f5e',
+          dmg: 2
+        });
+      }
+      playSound('cannon');
+      shakeTime = 4;
+    } else if (currentWeapon === 'LASER') {
+      // Giant 32px Hyper Piercing Beam
+      player.fireCooldown = 5;
+      const beamWidth = rank >= 3 ? 38 : 26;
+      bullets.push({
+        x: px, y: py - 30,
+        vx: 0, vy: -25,
+        w: beamWidth, h: 64, r: beamWidth / 2,
+        type: 'laser',
+        color: '#38bdf8',
+        dmg: 3
+      });
+      playSound('laser');
+    } else if (currentWeapon === 'MISSILE') {
+      // Hellfire Barrage (4 Rockets)
+      player.fireCooldown = 12;
+      bullets.push({ x: px - 28, y: py, vx: -4, vy: -8, w: 16, h: 24, r: 12, type: 'missile', color: '#c084fc', dmg: 4 });
+      bullets.push({ x: px - 12, y: py - 10, vx: -1.5, vy: -10, w: 16, h: 24, r: 12, type: 'missile', color: '#c084fc', dmg: 4 });
+      bullets.push({ x: px + 12, y: py - 10, vx: 1.5, vy: -10, w: 16, h: 24, r: 12, type: 'missile', color: '#c084fc', dmg: 4 });
+      bullets.push({ x: px + 28, y: py, vx: 4, vy: -8, w: 16, h: 24, r: 12, type: 'missile', color: '#c084fc', dmg: 4 });
+      playSound('cannon');
+    } else if (currentWeapon === 'BLAST') {
+      // Nuke Cluster
+      player.fireCooldown = 15;
+      bullets.push({ x: px, y: py - 20, vx: 0, vy: -12, w: 22, h: 22, r: 16, type: 'blast', color: '#facc15', dmg: 5 });
+      playSound('cannon');
+      shakeTime = 5;
+    }
+  }
+
+  function spawnEnemy() {
+    const isElite = Math.random() < 0.25;
+    enemies.push({
+      x: Math.random() * (width - 50) + 25,
+      y: -40,
+      w: isElite ? 52 : 36,
+      h: isElite ? 52 : 36,
+      hp: (isElite ? 10 : 3) + Math.floor(score / 500),
+      maxHp: (isElite ? 10 : 3) + Math.floor(score / 500),
+      isElite: isElite,
+      speed: (isElite ? 1.7 : 2.5) + Math.random() * 0.4
+    });
+  }
+
+  function spawnDrop(x, y) {
+    const types = ['W_SPREAD', 'W_LASER', 'W_MISSILE', 'W_BLAST'];
+    const chosen = types[Math.floor(Math.random() * types.length)];
+    drops.push({ x: x, y: y, type: chosen, vy: 1.8 });
+  }
+
+  function createExplosion(x, y, color, count = 12) {
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: x, y: y,
+        vx: (Math.random() - 0.5) * 9,
+        vy: (Math.random() - 0.5) * 9,
+        life: 25,
+        color: color
+      });
+    }
+  }
+
+  function update() {
+    if (!gameRunning) return;
+
+    // Movement
+    player.x += (player.targetX - player.x) * 0.25;
+    player.y += (player.targetY - player.y) * 0.25;
+    player.x = Math.max(player.w/2, Math.min(width - player.w/2, player.x));
+    player.y = Math.max(player.h/2, Math.min(height - player.h/2, player.y));
+    player.droneAngle += 0.04;
+
+    // Weapon timer
+    if (weaponTimer > 0) {
+      weaponTimer--;
+      if (weaponTimer <= 0) {
+        currentWeapon = 'CANNON';
+      }
+    }
+
+    fireGuns();
+
+    // Check Score Evolution
+    checkRankProgression();
+
+    // Dense Cigar smoke
+    if (Math.random() < 0.5) {
+      smokeParticles.push({
+        x: player.x - player.w * 0.25,
+        y: player.y + player.h * 0.35,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: -1.6,
+        alpha: 0.8,
+        size: Math.random() * 5 + 4
+      });
+    }
+
+    // Update bullets
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      let b = bullets[i];
+      if (b.type === 'missile' && enemies.length > 0) {
+        let target = enemies[0];
+        let angle = Math.atan2(target.y - b.y, target.x - b.x);
+        b.vx += Math.cos(angle) * 0.8;
+        b.vy += Math.sin(angle) * 0.8;
+      }
+      b.x += b.vx;
+      b.y += b.vy;
+
+      if (b.y < -50 || b.y > height + 50 || b.x < -30 || b.x > width + 30) {
+        bullets.splice(i, 1);
+      }
+    }
+
+    // Update Shockwaves
+    for (let i = shockwaves.length - 1; i >= 0; i--) {
+      let sw = shockwaves[i];
+      sw.r += 6;
+      sw.alpha -= 0.04;
+      if (sw.alpha <= 0) shockwaves.splice(i, 1);
+    }
+
+    // Spawn enemies
+    if (Math.random() < 0.048 + rank * 0.008) spawnEnemy();
+
+    // Update enemies
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      let en = enemies[i];
+      en.y += en.speed;
+
+      // Heavy collision detection
+      for (let j = bullets.length - 1; j >= 0; j--) {
+        let b = bullets[j];
+        if (Math.hypot(en.x - b.x, en.y - b.y) < en.w/2 + b.r + 6) {
+          en.hp -= b.dmg;
+          createExplosion(b.x, b.y, '#facc15', 3);
+
+          // Blast Nuclear AOE
+          if (b.type === 'blast') {
+            shockwaves.push({ x: b.x, y: b.y, r: 10, alpha: 0.9 });
+            enemies.forEach(other => {
+              if (Math.hypot(other.x - b.x, other.y - b.y) < 90) {
+                other.hp -= 4;
+              }
+            });
+            createExplosion(b.x, b.y, '#f59e0b', 22);
+            playSound('boom');
+          }
+
+          if (b.type !== 'laser') bullets.splice(j, 1);
+
+          if (en.hp <= 0) {
+            playSound('boom');
+            shakeTime = en.isElite ? 10 : 5;
+            score += en.isElite ? 70 : 25;
+            createExplosion(en.x, en.y, en.isElite ? '#ec4899' : '#a855f7', 16);
+            if (Math.random() < 0.4) spawnDrop(en.x, en.y);
+            enemies.splice(i, 1);
+            break;
+          }
+        }
+      }
+
+      // Hit player
+      if (Math.hypot(en.x - player.x, en.y - player.y) < player.w/2 + en.w/3) {
+        enemies.splice(i, 1);
+        lives--;
+        shakeTime = 14;
+        playSound('boom');
+        createExplosion(player.x, player.y, '#ef4444', 18);
+        if (lives <= 0) gameOver();
+        continue;
+      }
+
+      if (en.y > height + 50) enemies.splice(i, 1);
+    }
+
+    // Update Drops
+    for (let i = drops.length - 1; i >= 0; i--) {
+      let d = drops[i];
+      d.y += d.vy;
+
+      if (Math.hypot(d.x - player.x, d.y - player.y) < player.w/2 + 22) {
+        playSound('powerup');
+        currentWeapon = d.type.replace('W_', '');
+        weaponTimer = 550;
+        createExplosion(d.x, d.y, '#2dd4bf', 10);
+        drops.splice(i, 1);
+        continue;
+      }
+
+      if (d.y > height + 30) drops.splice(i, 1);
+    }
+
+    // UI Updates
+    document.getElementById('score').innerText = score;
+    document.getElementById('rank-display').innerText = `RANK ${rank}`;
+    document.getElementById('weapon-display').innerText = currentWeapon;
+    document.getElementById('lives').innerText = '❤️'.repeat(Math.max(0, lives));
+  }
+
+  function draw() {
+    ctx.save();
+    if (shakeTime > 0) {
+      ctx.translate((Math.random() - 0.5) * shakeTime, (Math.random() - 0.5) * shakeTime);
+      shakeTime--;
+    }
+
+    ctx.clearRect(0, 0, width, height);
+
+    // Neon Speedlines
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.16)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < width; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+    }
+
+    // Draw Shockwaves
+    shockwaves.forEach(sw => {
+      ctx.strokeStyle = `rgba(250, 204, 21, ${sw.alpha})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2); ctx.stroke();
+    });
+
+    // Draw Smoke
+    for (let i = smokeParticles.length - 1; i >= 0; i--) {
+      let sp = smokeParticles[i];
+      sp.x += sp.vx; sp.y += sp.vy; sp.alpha -= 0.015; sp.size += 0.15;
+      ctx.fillStyle = `rgba(226, 232, 240, ${sp.alpha})`;
+      ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.size, 0, Math.PI * 2); ctx.fill();
+      if (sp.alpha <= 0) smokeParticles.splice(i, 1);
+    }
+
+    // Draw Weapon Drops
+    drops.forEach(d => {
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      ctx.fillStyle = '#facc15';
+      ctx.shadowColor = '#eab308';
+      ctx.shadowBlur = 14;
+      ctx.fillRect(-15, -15, 30, 30);
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 13px monospace';
+      ctx.fillText(d.type.charAt(2), -5, 5);
+      ctx.restore();
+    });
+
+    // Draw Bullets (Massive Glowing Ordnance)
+    bullets.forEach(b => {
+      ctx.save();
+      ctx.fillStyle = b.color;
+      ctx.shadowColor = b.color;
+      ctx.shadowBlur = 14;
+
+      if (b.type === 'laser') {
+        ctx.fillRect(b.x - b.w/2, b.y, b.w, b.h);
+      } else if (b.type === 'missile') {
+        ctx.fillRect(b.x - b.w/2, b.y, b.w, b.h);
+      } else if (b.type === 'blast') {
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+      } else {
+        // Broad oval plasma shells
+        ctx.beginPath();
+        ctx.ellipse(b.x, b.y, b.w/2, b.h/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+
+    // Draw Enemies
+    enemies.forEach(en => {
+      ctx.save();
+      ctx.translate(en.x, en.y);
+      ctx.fillStyle = en.isElite ? '#ec4899' : '#8b5cf6';
+      ctx.shadowColor = en.isElite ? '#f43f5e' : '#a855f7';
+      ctx.shadowBlur = 10;
+
+      ctx.beginPath();
+      ctx.moveTo(0, en.h/2);
+      ctx.lineTo(en.w/2, -en.h/3);
+      ctx.lineTo(0, -en.h/2);
+      ctx.lineTo(-en.w/2, -en.h/3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Health bar
+      if (en.isElite) {
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-18, -en.h/2 - 8, 36, 4);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(-18, -en.h/2 - 8, (en.hp / en.maxHp) * 36, 4);
+      }
+      ctx.restore();
+    });
+
+    // Draw Escort Battle Drones (Rank 3 & 4)
+    if (rank >= 3) {
+      const droneCount = rank >= 4 ? 4 : 2;
+      for (let d = 0; d < droneCount; d++) {
+        let ang = player.droneAngle + (d * (Math.PI * 2 / droneCount));
+        let dx = player.x + Math.cos(ang) * 58;
+        let dy = player.y + Math.sin(ang) * 32;
+
+        ctx.save();
+        ctx.translate(dx, dy);
+        ctx.fillStyle = '#2dd4bf';
+        ctx.shadowColor = '#14b8a6';
+        ctx.shadowBlur = 10;
+        // Diamond drone
+        ctx.beginPath();
+        ctx.moveTo(0, -10); ctx.lineTo(8, 0); ctx.lineTo(0, 10); ctx.lineTo(-8, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // Draw Player
+    const px = player.x - player.w / 2;
+    const py = player.y - player.h / 2;
+    if (hasCustomImg) {
+      ctx.drawImage(bossImg, px, py, player.w, player.h);
+    } else {
+      drawFallbackBoss(px, py, player.w, player.h);
+    }
+
+    // Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      let p = particles[i];
+      p.x += p.vx; p.y += p.vy; p.life--;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, 4, 4);
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    ctx.restore();
+
+    requestAnimationFrame(() => {
+      update();
+      draw();
+    });
+  }
+
+  function startGame() {
+    score = 0;
+    lives = 3;
+    rank = 1;
+    currentWeapon = 'CANNON';
+    enemies = [];
+    bullets = [];
+    drops = [];
+    particles = [];
+    shockwaves = [];
+    gameRunning = true;
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('gameover-screen').classList.add('hidden');
+  }
+
+  function gameOver() {
+    gameRunning = false;
+    document.getElementById('gameover-screen').classList.remove('hidden');
+    document.getElementById('final-stats').innerText = `SCORE: ${score}`;
+    document.getElementById('final-rank').innerText = `FINAL FORM: RANK ${rank} WAR GODFATHER 👑`;
+  }
+
+  document.getElementById('start-btn').addEventListener('click', startGame);
+  document.getElementById('restart-btn').addEventListener('click', startGame);
+
+  document.getElementById('share-btn').addEventListener('click', () => {
+    const text = encodeURIComponent(
+      `Evolved Don Glump to RANK ${rank} with ${score} PTS in the @Elyziumaa Challenge! 🚀🔥\n\nPure bullet storm & battle drones. Play live:\n👉 https://cosmoszwj.github.io/tools/\n\n#Elyziuma #GameDev #Arcade`
+    );
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+  });
+
+  draw();
+</script>
 </body>
 </html>
