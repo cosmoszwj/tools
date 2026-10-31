@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Don Glump: Heavy Evolution | @Elyziumaa</title>
+  <title>Don Glump: Heavy Artillery | Elyziuma</title>
   <style>
     * {
       box-sizing: border-box;
@@ -152,7 +152,7 @@
 
   <div class="hud">
     <div class="hud-box">🏆 <span id="score">0</span></div>
-    <div class="hud-box">⚡ <span id="rank-display" style="color: #2dd4bf;">RANK I</span></div>
+    <div class="hud-box">⚡ <span id="rank-display" style="color: #2dd4bf;">RANK 1</span></div>
     <div class="hud-box">🔫 <span id="weapon-display" style="color: #facc15;">CANNON</span></div>
     <div class="hud-box">❤️ <span id="lives">3</span></div>
   </div>
@@ -163,7 +163,7 @@
   <div id="start-screen" class="modal">
     <h1>Don Glump: Overkill</h1>
     <p style="color:#c084fc; font-weight: bold;">Elyziuma Community Creative Challenge</p>
-    <p>Pilot <b>Don Glump</b> with heavy artillery! Score points to evolve your character from a lone street boss into an army with escort battle drones!</p>
+    <p>Pilot <b>Don Glump</b>, catch incoming heavy weapons, score points to evolve from street boss into a war machine with escort battle drones!</p>
     
     <div style="margin-bottom: 16px;">
       <span class="rank-tag">400 pts: 4-Barrel Quad Cannon</span>
@@ -250,12 +250,6 @@
   const ctx = canvas.getContext('2d');
   const container = document.getElementById('game-container');
 
-  // Load custom image if available
-  const bossImg = new Image();
-  bossImg.src = 'boss.png';
-  let hasCustomImg = false;
-  bossImg.onload = () => { hasCustomImg = true; };
-
   let width, height;
   function resize() {
     width = canvas.width = container.clientWidth;
@@ -269,24 +263,18 @@
   let score = 0;
   let lives = 3;
   let shakeTime = 0;
-
-  // Evolution Ranks:
-  // Rank 1 (0): Dual Heavy Cannon
-  // Rank 2 (400): Quad Cannon
-  // Rank 3 (1200): 2 Escort Drones + Dual Rockets
-  // Rank 4 (2500): 4 Escort Drones + Overkill Barrage
   let rank = 1;
   let currentWeapon = 'CANNON';
   let weaponTimer = 0;
 
-  // Player
+  // 100% 还原第一版经典角色尺寸 (w: 70, h: 80)
   const player = {
     x: width / 2,
-    y: height - 110,
+    y: height - 120,
     w: 70,
     h: 80,
     targetX: width / 2,
-    targetY: height - 110,
+    targetY: height - 120,
     fireCooldown: 0,
     droneAngle: 0
   };
@@ -318,7 +306,6 @@
     setTimeout(() => { el.classList.remove('show'); }, 1400);
   }
 
-  // Check & upgrade player rank based on score
   function checkRankProgression() {
     let newRank = 1;
     if (score >= 2500) newRank = 4;
@@ -327,57 +314,79 @@
 
     if (newRank > rank) {
       rank = newRank;
-      lives = Math.min(lives + 1, 3); // Heal 1 heart upon evolving
-      if (rank === 2) triggerRankBanner("⚡ RANK II: QUAD CANNONS!");
-      else if (rank === 3) triggerRankBanner("👑 RANK III: ESCORT DRONES DEPLOYED!");
-      else if (rank === 4) triggerRankBanner("💥 RANK IV: OVERKILL BARRAGE!");
+      lives = Math.min(lives + 1, 3);
+      if (rank === 2) triggerRankBanner("⚡ RANK 2: QUAD CANNONS!");
+      else if (rank === 3) triggerRankBanner("👑 RANK 3: DUAL DRONES DEPLOYED!");
+      else if (rank === 4) triggerRankBanner("💥 RANK 4: OVERKILL BARRAGE!");
     }
   }
 
-  // Draw Fallback Boss
-  function drawFallbackBoss(x, y, w, h) {
+  // =========================================================================
+  // 【100% 像素级还原第一版最开始那个最好看的原生绘图算法】
+  // 完全不需要外部图片，永远不带灰色方框，圆润无瑕疵！
+  // =========================================================================
+  function drawOriginalClassicBoss(x, y, w, h) {
     ctx.save();
     ctx.translate(x, y);
 
-    // Body
+    // 1. 圆润深青色身体 (Teal chubby body)
     ctx.fillStyle = '#1c727d';
     ctx.beginPath();
-    ctx.ellipse(w/2, h/2 + 4, w*0.46, h*0.48, 0, 0, Math.PI * 2);
+    ctx.ellipse(w/2, h/2 + 5, w * 0.46, h * 0.48, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Shirt & Tie
+    // 2. 白衬衫小翻领 (White shirt collar)
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.moveTo(w*0.25, h*0.55); ctx.lineTo(w*0.5, h*0.75); ctx.lineTo(w*0.75, h*0.55);
+    ctx.moveTo(w * 0.25, h * 0.55);
+    ctx.lineTo(w * 0.5, h * 0.75);
+    ctx.lineTo(w * 0.75, h * 0.55);
     ctx.fill();
 
+    // 黑色领带 (Black Tie)
     ctx.fillStyle = '#0a0a0a';
     ctx.beginPath();
-    ctx.moveTo(w*0.47, h*0.62); ctx.lineTo(w*0.53, h*0.62); ctx.lineTo(w*0.55, h*0.88);
-    ctx.lineTo(w*0.5, h*0.93); ctx.lineTo(w*0.45, h*0.88);
+    ctx.moveTo(w * 0.47, h * 0.62);
+    ctx.lineTo(w * 0.53, h * 0.62);
+    ctx.lineTo(w * 0.55, h * 0.88);
+    ctx.lineTo(w * 0.5, h * 0.93);
+    ctx.lineTo(w * 0.45, h * 0.88);
     ctx.fill();
 
-    // Vest
+    // 3. 几何多面体马甲 (Mosaic pattern vest)
     ctx.fillStyle = '#48325a';
     ctx.beginPath();
-    ctx.moveTo(w*0.15, h*0.65); ctx.lineTo(w*0.4, h*0.85); ctx.lineTo(w*0.18, h*0.98);
+    ctx.moveTo(w * 0.15, h * 0.65);
+    ctx.lineTo(w * 0.4, h * 0.85);
+    ctx.lineTo(w * 0.18, h * 0.98);
     ctx.fill();
+
     ctx.fillStyle = '#2c5359';
     ctx.beginPath();
-    ctx.moveTo(w*0.85, h*0.65); ctx.lineTo(w*0.6, h*0.85); ctx.lineTo(w*0.82, h*0.98);
+    ctx.moveTo(w * 0.85, h * 0.65);
+    ctx.lineTo(w * 0.6, h * 0.85);
+    ctx.lineTo(w * 0.82, h * 0.98);
     ctx.fill();
 
-    // Lips & Sunglasses
+    // 4. 大红厚嘴唇 (Red thick lips)
     ctx.fillStyle = '#d9383a';
-    ctx.beginPath(); ctx.ellipse(w/2, h*0.42, w*0.26, h*0.07, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#090d16';
-    ctx.fillRect(w*0.2, h*0.26, w*0.25, h*0.12);
-    ctx.fillRect(w*0.55, h*0.26, w*0.25, h*0.12);
-    ctx.fillRect(w*0.42, h*0.28, w*0.16, h*0.04);
+    ctx.beginPath();
+    ctx.ellipse(w/2, h * 0.42, w * 0.26, h * 0.07, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Cigar with glowing flame
-    ctx.fillStyle = '#f8fafc'; ctx.fillRect(w*0.22, h*0.43, w*0.16, 4);
-    ctx.fillStyle = '#ef4444'; ctx.fillRect(w*0.2, h*0.43, 3, 4);
+    // 5. 经典黑墨镜 (Sunglasses)
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(w * 0.2, h * 0.26, w * 0.25, h * 0.12);
+    ctx.fillRect(w * 0.55, h * 0.26, w * 0.25, h * 0.12);
+    ctx.fillRect(w * 0.42, h * 0.28, w * 0.16, h * 0.04);
+
+    // 6. 雪茄与燃烧红星 (Cigar & Ember)
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(w * 0.22, h * 0.43, w * 0.16, 4);
+    ctx.fillStyle = '#ef4444';
+    ctx.shadowColor = '#f97316';
+    ctx.shadowBlur = 6;
+    ctx.fillRect(w * 0.2, h * 0.43, 3, 4);
 
     ctx.restore();
   }
@@ -393,30 +402,25 @@
     const py = player.y;
 
     if (currentWeapon === 'CANNON') {
-      // Scale with Rank!
       if (rank === 1) {
         player.fireCooldown = 8;
         bullets.push({ x: px - 18, y: py - 15, vx: 0, vy: -15, w: 12, h: 26, r: 10, type: 'cannon', color: '#2dd4bf', dmg: 2 });
         bullets.push({ x: px + 18, y: py - 15, vx: 0, vy: -15, w: 12, h: 26, r: 10, type: 'cannon', color: '#2dd4bf', dmg: 2 });
       } else if (rank === 2) {
-        // Quad Cannons!
         player.fireCooldown = 7;
         bullets.push({ x: px - 26, y: py - 10, vx: -1.2, vy: -16, w: 13, h: 28, r: 11, type: 'cannon', color: '#a855f7', dmg: 2 });
         bullets.push({ x: px - 10, y: py - 18, vx: 0, vy: -17, w: 14, h: 30, r: 12, type: 'cannon', color: '#2dd4bf', dmg: 2.5 });
         bullets.push({ x: px + 10, y: py - 18, vx: 0, vy: -17, w: 14, h: 30, r: 12, type: 'cannon', color: '#2dd4bf', dmg: 2.5 });
         bullets.push({ x: px + 26, y: py - 10, vx: 1.2, vy: -16, w: 13, h: 28, r: 11, type: 'cannon', color: '#a855f7', dmg: 2 });
       } else if (rank >= 3) {
-        // Quad + Homing Micro-Rockets from Drones!
         player.fireCooldown = 6;
         bullets.push({ x: px - 14, y: py - 18, vx: 0, vy: -18, w: 15, h: 32, r: 13, type: 'cannon', color: '#2dd4bf', dmg: 3 });
         bullets.push({ x: px + 14, y: py - 18, vx: 0, vy: -18, w: 15, h: 32, r: 13, type: 'cannon', color: '#2dd4bf', dmg: 3 });
-        // Side Drone shots
         bullets.push({ x: px - 48, y: py, vx: -2, vy: -15, w: 12, h: 24, r: 9, type: 'cannon', color: '#facc15', dmg: 2 });
         bullets.push({ x: px + 48, y: py, vx: 2, vy: -15, w: 12, h: 24, r: 9, type: 'cannon', color: '#facc15', dmg: 2 });
       }
       playSound('cannon');
     } else if (currentWeapon === 'SPREAD') {
-      // 9 to 11 Way Omega Spread
       player.fireCooldown = 11;
       const count = rank >= 3 ? 11 : 9;
       const step = 0.8 / (count - 1);
@@ -435,7 +439,6 @@
       playSound('cannon');
       shakeTime = 4;
     } else if (currentWeapon === 'LASER') {
-      // Giant 32px Hyper Piercing Beam
       player.fireCooldown = 5;
       const beamWidth = rank >= 3 ? 38 : 26;
       bullets.push({
@@ -448,7 +451,6 @@
       });
       playSound('laser');
     } else if (currentWeapon === 'MISSILE') {
-      // Hellfire Barrage (4 Rockets)
       player.fireCooldown = 12;
       bullets.push({ x: px - 28, y: py, vx: -4, vy: -8, w: 16, h: 24, r: 12, type: 'missile', color: '#c084fc', dmg: 4 });
       bullets.push({ x: px - 12, y: py - 10, vx: -1.5, vy: -10, w: 16, h: 24, r: 12, type: 'missile', color: '#c084fc', dmg: 4 });
@@ -456,7 +458,6 @@
       bullets.push({ x: px + 28, y: py, vx: 4, vy: -8, w: 16, h: 24, r: 12, type: 'missile', color: '#c084fc', dmg: 4 });
       playSound('cannon');
     } else if (currentWeapon === 'BLAST') {
-      // Nuke Cluster
       player.fireCooldown = 15;
       bullets.push({ x: px, y: py - 20, vx: 0, vy: -12, w: 22, h: 22, r: 16, type: 'blast', color: '#facc15', dmg: 5 });
       playSound('cannon');
@@ -499,31 +500,26 @@
   function update() {
     if (!gameRunning) return;
 
-    // Movement
+    // Smooth movement
     player.x += (player.targetX - player.x) * 0.25;
     player.y += (player.targetY - player.y) * 0.25;
     player.x = Math.max(player.w/2, Math.min(width - player.w/2, player.x));
     player.y = Math.max(player.h/2, Math.min(height - player.h/2, player.y));
     player.droneAngle += 0.04;
 
-    // Weapon timer
     if (weaponTimer > 0) {
       weaponTimer--;
-      if (weaponTimer <= 0) {
-        currentWeapon = 'CANNON';
-      }
+      if (weaponTimer <= 0) currentWeapon = 'CANNON';
     }
 
     fireGuns();
-
-    // Check Score Evolution
     checkRankProgression();
 
-    // Dense Cigar smoke
-    if (Math.random() < 0.5) {
+    // 香烟烟雾精确从烟头冒出
+    if (Math.random() < 0.45) {
       smokeParticles.push({
         x: player.x - player.w * 0.25,
-        y: player.y + player.h * 0.35,
+        y: player.y + player.h * 0.43,
         vx: (Math.random() - 0.5) * 0.6,
         vy: -1.6,
         alpha: 0.8,
@@ -564,20 +560,16 @@
       let en = enemies[i];
       en.y += en.speed;
 
-      // Heavy collision detection
       for (let j = bullets.length - 1; j >= 0; j--) {
         let b = bullets[j];
         if (Math.hypot(en.x - b.x, en.y - b.y) < en.w/2 + b.r + 6) {
           en.hp -= b.dmg;
           createExplosion(b.x, b.y, '#facc15', 3);
 
-          // Blast Nuclear AOE
           if (b.type === 'blast') {
             shockwaves.push({ x: b.x, y: b.y, r: 10, alpha: 0.9 });
             enemies.forEach(other => {
-              if (Math.hypot(other.x - b.x, other.y - b.y) < 90) {
-                other.hp -= 4;
-              }
+              if (Math.hypot(other.x - b.x, other.y - b.y) < 90) other.hp -= 4;
             });
             createExplosion(b.x, b.y, '#f59e0b', 22);
             playSound('boom');
@@ -628,7 +620,7 @@
       if (d.y > height + 30) drops.splice(i, 1);
     }
 
-    // UI Updates
+    // Update HUD
     document.getElementById('score').innerText = score;
     document.getElementById('rank-display').innerText = `RANK ${rank}`;
     document.getElementById('weapon-display').innerText = currentWeapon;
@@ -644,7 +636,7 @@
 
     ctx.clearRect(0, 0, width, height);
 
-    // Neon Speedlines
+    // Speedlines
     ctx.strokeStyle = 'rgba(168, 85, 247, 0.16)';
     ctx.lineWidth = 1;
     for (let x = 0; x < width; x += 40) {
@@ -681,7 +673,7 @@
       ctx.restore();
     });
 
-    // Draw Bullets (Massive Glowing Ordnance)
+    // Draw Bullets
     bullets.forEach(b => {
       ctx.save();
       ctx.fillStyle = b.color;
@@ -695,7 +687,6 @@
       } else if (b.type === 'blast') {
         ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
       } else {
-        // Broad oval plasma shells
         ctx.beginPath();
         ctx.ellipse(b.x, b.y, b.w/2, b.h/2, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -719,7 +710,6 @@
       ctx.closePath();
       ctx.fill();
 
-      // Health bar
       if (en.isElite) {
         ctx.fillStyle = '#ef4444';
         ctx.fillRect(-18, -en.h/2 - 8, 36, 4);
@@ -742,7 +732,6 @@
         ctx.fillStyle = '#2dd4bf';
         ctx.shadowColor = '#14b8a6';
         ctx.shadowBlur = 10;
-        // Diamond drone
         ctx.beginPath();
         ctx.moveTo(0, -10); ctx.lineTo(8, 0); ctx.lineTo(0, 10); ctx.lineTo(-8, 0);
         ctx.closePath();
@@ -751,14 +740,12 @@
       }
     }
 
-    // Draw Player
+    // =========================================================
+    // 【强制只画最开始那个原汁原味的角色，彻底忽略外部图片】
+    // =========================================================
     const px = player.x - player.w / 2;
     const py = player.y - player.h / 2;
-    if (hasCustomImg) {
-      ctx.drawImage(bossImg, px, py, player.w, player.h);
-    } else {
-      drawFallbackBoss(px, py, player.w, player.h);
-    }
+    drawOriginalClassicBoss(px, py, player.w, player.h);
 
     // Particles
     for (let i = particles.length - 1; i >= 0; i--) {
