@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Excel 一周速成 · 工具 · 函数 · 透视表</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23107C41'/%3E%3Cpath d='M9 9l14 14M23 9L9 23' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+/* ============ 设计令牌 ============ */
+:root{
+  --paper:#F4F6F5;
+  --sheet:#FFFFFF;
+  --ink:#13211B;
+  --ink2:#5B6C63;
+  --green:#107C41;
+  --green-d:#0A5B30;
+  --green-w:#EAF4EE;
+  --rule:#DCE4DF;
+  --rule2:#EDF1EE;
+  --amber:#A9610A;
+  --amber-w:#FBF3E6;
+  --red:#AB3A2B;
+  --red-w:#FAEDEA;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --mono:"SF Mono",ui-monospace,SFMono-Regular,Consolas,"Liberation Mono","Courier New",monospace;
+  --serif:Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.75;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+img{max-width:100%}
+a{color:var(--green-d);text-decoration:none;border-bottom:1px solid rgba(16,124,65,.35)}
+a:hover{border-bottom-color:var(--green)}
+
+/* ============ 顶部编辑栏 ============ */
+.bar{
+  position:sticky;top:0;z-index:70;display:flex;align-items:stretch;
+  height:44px;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:11.5px;
+}
+.namebox{
+  width:70px;display:flex;align-items:center;justify-content:center;
+  border-right:1px solid var(--rule);color:var(--ink);font-size:11px;letter-spacing:.04em;
+  flex:0 0 auto;
+}
+.fxmark{padding:0 10px;display:flex;align-items:center;font-family:var(--serif);font-style:italic;font-weight:700;color:var(--green-d);font-size:14px;border-right:1px solid var(--rule2)}
+.fxval{flex:1 1 auto;min-width:0;display:flex;align-items:center;padding:0 12px;color:var(--ink2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.fxval b{color:var(--ink);font-weight:600}
+.bar-tally{flex:0 0 auto;display:flex;align-items:center;padding:0 12px;color:var(--ink2);border-left:1px solid var(--rule2);font-size:11px}
+
+/* ============ 页面骨架：一张工作表 ============ */
+main{max-width:1160px;margin:0 auto;padding:0 18px 96px}
+.sec{
+  display:grid;grid-template-columns:26px minmax(0,1fr);column-gap:9px;
+  padding:40px 0 44px;border-top:1px solid var(--rule);
+}
+.rn{font-family:var(--mono);font-size:10.5px;color:#9BA9A1;text-align:right;padding-top:8px;line-height:1}
+.h2{font-size:clamp(22px,4.6vw,33px);line-height:1.22;font-weight:800;letter-spacing:-.022em;margin:0 0 12px}
+.lead{font-size:16px;color:var(--ink2);max-width:60ch;margin:0 0 26px}
+.lead b{color:var(--ink);font-weight:600}
+
+/* ============ 首屏 ============ */
+.sec.hero{border-top:0;padding-top:26px}
+.hero-in{display:grid;gap:34px}
+@media(min-width:900px){.hero-in{grid-template-columns:.94fr 1.06fr;gap:52px;align-items:start}}
+.hero-copy{min-width:0}
+.h1{font-size:clamp(32px,7.4vw,58px);line-height:1.06;font-weight:850;letter-spacing:-.035em;margin:0 0 18px}
+.h1 em{font-style:normal;color:var(--green)}
+.hero-lead{font-size:clamp(15px,2vw,17.5px);line-height:1.8;color:var(--ink2);margin:0 0 26px;max-width:34em}
+.hero-lead b{color:var(--ink);font-weight:600}
+
+.spec{border:1px solid var(--rule);border-radius:2px;background:var(--sheet);overflow:hidden}
+.spec-row{display:grid;grid-template-columns:78px minmax(0,1fr);border-bottom:1px solid var(--rule2)}
+.spec-row:last-child{border-bottom:0}
+.spec-k{font-size:12px;color:var(--ink2);background:#F7F9F8;padding:9px 10px;border-right:1px solid var(--rule2);text-align:center}
+.spec-v{font-size:13.5px;padding:9px 12px;color:var(--ink);line-height:1.55}
+
+/* Excel 界面模拟 */
+.mock{background:#fff;border:1px solid #CFDAD4;border-radius:3px;overflow:hidden;box-shadow:0 1px 2px rgba(19,33,27,.05),0 26px 50px -34px rgba(16,124,65,.45)}
+.mock-bar{display:flex;align-items:center;height:32px;background:#F7F9F8;border-bottom:1px solid var(--rule);font-size:10.5px;font-family:var(--mono);color:var(--ink2)}
+.mtabs{display:flex;height:100%;border-right:1px solid var(--rule)}
+.mtab{padding:0 10px;display:flex;align-items:center;position:relative;color:var(--ink2)}
+.mtab.on{color:var(--green-d);font-weight:700;background:#fff}
+.mtab.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--green)}
+.mfx{display:flex;align-items:center;gap:8px;padding:0 10px;flex:1;min-width:0;overflow:hidden}
+.mfx .box{border:1px solid var(--rule);background:#fff;padding:1px 6px;font-size:10px;color:var(--ink);height:18px;display:flex;align-items:center}
+.mfx .fxi{font-family:var(--serif);font-style:italic;color:var(--green-d);font-weight:700}
+.mfx .fxt{white-space:nowrap;overflow:hidden;color:var(--ink);position:relative;border-right:1px solid transparent}
+.mfx .fxt .typed{display:inline-block;width:0;overflow:hidden;vertical-align:top;white-space:nowrap;animation:typein .9s steps(6) 1.5s forwards}
+.caret{display:inline-block;width:1px;height:12px;background:var(--green);vertical-align:middle;margin-left:1px;animation:blink 1s steps(1) infinite}
+
+.mgrid{display:grid;grid-template-columns:30px repeat(4,minmax(0,1fr));font-family:var(--mono);font-size:12px}
+.mh{background:#F3F6F4;color:#78877E;font-size:10px;display:flex;align-items:center;justify-content:center;height:24px;border-right:1px solid var(--rule2);border-bottom:1px solid var(--rule2)}
+.mh.corner{background:#EDF1EE}
+.mc{border-right:1px solid var(--rule2);border-bottom:1px solid var(--rule2);padding:5px 8px;height:30px;display:flex;align-items:center;color:var(--ink);white-space:nowrap;overflow:hidden}
+.mc.num{justify-content:flex-end;font-variant-numeric:tabular-nums}
+.mc.rh{background:#F3F6F4;color:#9BA9A1;justify-content:center;padding:0;font-size:10px}
+.mc.fill{opacity:0;animation:pop .4s ease var(--d,0s) forwards}
+.mc.hot{background:var(--green-w);color:var(--green-d);font-weight:700;animation:hotIn .5s ease 2.55s both}
+
+.mock-chart{border-top:1px solid var(--rule);padding:11px 10px 13px;background:#FCFDFC}
+.mcaprow{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;color:var(--ink2);margin-bottom:8px}
+.mcaprow b{color:var(--ink);font-weight:600;font-size:11px;letter-spacing:.02em}
+.mbars{display:grid;gap:5px}
+.mb{display:grid;grid-template-columns:40px minmax(0,1fr) 42px;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--ink2)}
+.mbtrack{height:7px;background:#EDF2EF;position:relative}
+.mbfill{height:7px;width:0;background:var(--green);transition:width .8s cubic-bezier(.2,.7,.3,1)}
+.mbval{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+.mock-note{font-size:11.5px;color:var(--ink2);margin:10px 0 0;display:flex;gap:8px;align-items:flex-start}
+.mock-note .num{font-family:var(--mono);color:var(--green-d);font-size:10px;border:1px solid var(--rule);padding:0 4px;line-height:1.5;flex:0 0 auto;margin-top:2px}
+.replay{margin-left:auto;border:1px solid var(--rule);background:#fff;font-family:var(--mono);font-size:10px;color:var(--ink2);padding:2px 7px;cursor:pointer;border-radius:2px}
+.replay:hover{border-color:var(--green);color:var(--green-d)}
+
+/* ============ 三类能力 ============ */
+.layers{margin-top:6px}
+.layer{display:grid;grid-template-columns:30px minmax(0,1fr);column-gap:14px;padding:20px 0;border-bottom:1px solid var(--rule2);align-items:start}
+.layer-n{width:26px;height:26px;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--green-d);background:#fff;margin-top:4px}
+.layer h3{font-size:17px;margin:0 0 6px;font-weight:750;letter-spacing:-.01em}
+.layer h3 span{font-weight:400;color:var(--ink2);font-size:13px;margin-left:8px}
+.layer p{margin:0;font-size:14.5px;line-height:1.8;color:var(--ink2);max-width:64ch}
+.layer p b{color:var(--ink);font-weight:600}
+.layer-foot{margin:6px 0 0;font-family:var(--mono);font-size:11px;color:var(--green-d);letter-spacing:.01em}
+.layers-note{margin:18px 0 0;font-size:13.5px;color:var(--ink2);border-left:2px solid var(--green);padding:2px 0 2px 12px}
+.layers-note b{color:var(--ink)}
+
+/* ============ 7 天路线 ============ */
+.tl{margin-top:10px}
+.tl-row{display:grid;grid-template-columns:46px 18px minmax(0,1fr);column-gap:10px;padding-bottom:30px;position:relative}
+.tl-day{font-family:var(--mono);font-size:10px;color:var(--ink2);padding-top:4px}
+.tl-day b{display:block;font-size:12.5px;color:var(--green-d);font-weight:700;letter-spacing:.01em}
+.tl-axis{position:relative;display:flex;justify-content:center;padding-top:6px}
+.tl-axis::before{content:"";position:absolute;left:50%;top:0;bottom:-30px;width:1px;background:var(--rule);transform:translateX(-50%)}
+.tl-row.last .tl-axis::before{bottom:0}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--green);position:relative;z-index:1;box-shadow:0 0 0 3px var(--paper)}
+.tl-body h3{font-size:16px;font-weight:750;margin:0 0 6px;letter-spacing:-.01em}
+.tl-body ul{margin:0 0 8px;padding-left:17px}
+.tl-body li{font-size:14px;line-height:1.75;color:var(--ink2);margin-bottom:1px}
+.tl-body li b{color:var(--ink);font-weight:600}
+.tl-out{font-size:12.5px;color:var(--green-d);font-family:var(--mono);background:var(--green-w);display:inline-block;padding:3px 9px;border-radius:2px}
+
+/* ============ 工具/函数/透视 三章通用 ============ */
+.sub-h{font-size:13px;font-family:var(--mono);color:var(--green-d);margin:34px 0 12px;letter-spacing:.03em;display:flex;align-items:center;gap:10px}
+.sub-h::after{content:"";height:1px;background:var(--rule);flex:1}
+.prose{font-size:15px;line-height:1.85;color:var(--ink2);max-width:66ch}
+.prose b{color:var(--ink);font-weight:600}
+
+/* ribbon 模拟 */
+.ribbon{border:1px solid var(--rule);background:#fff;border-radius:2px;overflow:hidden;margin:0 0 14px}
+.rtabs{display:flex;background:#F7F9F8;border-bottom:1px solid var(--rule);overflow-x:auto}
+.rtab{appearance:none;border:0;background:none;font-family:var(--sans);font-size:13px;color:var(--ink2);padding:8px 14px;cursor:pointer;position:relative;white-space:nowrap}
+.rtab[aria-selected="true"]{color:var(--green-d);font-weight:700;background:#fff}
+.rtab[aria-selected="true"]::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:var(--green)}
+.rpanel{display:none;padding:12px 12px 8px;gap:14px;flex-wrap:wrap}
+.rpanel.on{display:flex}
+.rgroup{display:flex;flex-direction:column;gap:6px;padding-right:12px;border-right:1px solid var(--rule2)}
+.rgroup:last-child{border-right:0}
+.rgroup-btns{display:flex;gap:4px;flex-wrap:wrap;max-width:230px}
+.rbtn{appearance:none;border:1px solid transparent;background:#F7F9F8;font-family:var(--sans);font-size:12.5px;color:var(--ink);padding:5px 9px;cursor:pointer;border-radius:2px;line-height:1.4;text-align:left;min-height:32px}
+.rbtn:hover{background:var(--green-w);border-color:#CBE2D4}
+.rbtn[aria-pressed="true"]{background:var(--green-w);border-color:var(--green);color:var(--green-d);font-weight:600}
+.rlabel{font-size:10px;color:#8B9A92;text-align:center;font-family:var(--mono);letter-spacing:.04em}
+.tool-panel{border:1px solid var(--rule);border-left:2px solid var(--green);background:#fff;padding:14px 16px;border-radius:2px}
+.tp-title{font-size:15px;font-weight:700;margin:0 0 4px}
+.tp-loc{font-family:var(--mono);font-size:11px;color:var(--green-d);margin:0 0 8px}
+.tp-body{font-size:14px;line-height:1.8;color:var(--ink2);margin:0}
+.tp-body b{color:var(--ink)}
+.tp-keys{font-family:var(--mono);font-size:11.5px;color:var(--ink);background:#F4F7F5;display:inline-block;padding:2px 7px;margin-top:8px;border-radius:2px}
+
+/* 公式拆解 */
+.fbreak{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:16px 16px 12px;margin-bottom:8px;overflow-x:auto}
+.fbcode{font-family:var(--mono);font-size:clamp(12px,2.6vw,15px);white-space:nowrap;color:var(--ink);padding-bottom:10px;border-bottom:1px dashed var(--rule)}
+.fbcode .p1{color:var(--green-d);font-weight:700}
+.fbcode .p2{color:#7A4E00}
+.fbcode .p3{color:var(--red)}
+.fblegend{display:grid;gap:6px;margin-top:10px;font-size:12.5px;color:var(--ink2);min-width:0}
+.fblegend div{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px;align-items:baseline}
+.fblegend i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-top:1px}
+.fblegend b{color:var(--ink);font-weight:600}
+.fbnote{font-size:12px;color:var(--ink2);margin:8px 0 0}
+.fbnote b{color:var(--ink)}
+code,.kbd{font-family:var(--mono);font-size:12px;background:#F1F5F2;color:var(--green-d);padding:1px 5px;border-radius:2px;white-space:nowrap}
+.kbd{font-size:11.5px}
+
+/* 引用类型表 */
+.refgrid{width:100%;min-width:520px;border-collapse:collapse;font-size:13px;background:#fff;table-layout:fixed}
+.refgrid th{background:#F7F9F8;font-weight:600;font-size:12px;color:var(--ink2);padding:8px;border:1px solid var(--rule);text-align:left}
+.refgrid td{padding:9px 8px;border:1px solid var(--rule2);vertical-align:top;line-height:1.6}
+.refgrid td code{font-family:var(--mono);font-size:12px;background:#F4F7F5;padding:1px 4px;color:var(--green-d)}
+.refgrid col:nth-child(1){width:22%}
+.refgrid col:nth-child(2){width:30%}
+.refgrid col:nth-child(3){width:48%}
+
+/* 函数表 */
+.ftable{width:100%;border-collapse:collapse;font-size:13px;background:#fff;table-layout:fixed}
+.ftable th{background:var(--green);color:#fff;font-weight:600;font-size:11.5px;padding:8px 6px;text-align:left;letter-spacing:.02em}
+.ftable td{padding:9px 6px;border-bottom:1px solid var(--rule2);vertical-align:top;line-height:1.55}
+.ftable tr{cursor:pointer}
+.ftable tr:hover td{background:#F7FBF9}
+.ftable tr.sel td{background:var(--green-w)}
+.ftable .fname{font-family:var(--mono);font-size:12.5px;color:var(--green-d);font-weight:700;word-break:break-word}
+.ftable .fsyn{font-family:var(--mono);font-size:11px;color:var(--ink2);word-break:break-word;line-height:1.5}
+.ftable col:nth-child(1){width:26%}
+.ftable col:nth-child(2){width:26%}
+.ftable col:nth-child(3){width:26%}
+.ftable col:nth-child(4){width:22%}
+.ftable-wrap{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:#fff}
+.ftable-wrap .ftable{min-width:540px}
+.ftable-wrap .ftable th{position:sticky;top:0}
+
+/* ============ 函数实验室 ============ */
+.lab{border:1px solid var(--rule);background:#fff;border-radius:2px;overflow:hidden;margin-top:14px}
+.lab-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:9px 12px;background:#F9FBFA;border-bottom:1px solid var(--rule2)}
+.lab-head .lh{font-size:11px;font-family:var(--mono);color:var(--ink2);letter-spacing:.04em}
+.lab-head .lh b{color:var(--green-d)}
+.lab-hint{font-size:11.5px;color:var(--ink2)}
+.lab-hint b{color:var(--green-d);font-weight:600}
+.lab-grid{display:grid;grid-template-columns:minmax(0,1fr)}
+@media(min-width:880px){.lab-grid{grid-template-columns:minmax(0,1.16fr) minmax(0,.84fr)}}
+.lab-tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.lab-side{padding:14px 14px 18px;border-top:1px solid var(--rule2)}
+@media(min-width:880px){.lab-side{border-top:0;border-left:1px solid var(--rule2)}}
+.lt{width:100%;border-collapse:collapse;font-size:11.5px;min-width:500px;table-layout:fixed}
+.lt thead th{background:#F3F6F4;color:#6E7E75;font-weight:600;font-size:10px;padding:5px 5px;text-align:left;border-bottom:1px solid var(--rule);letter-spacing:.02em;white-space:nowrap}
+.lt thead th.num{text-align:right}
+.lt td{padding:2px 5px;border-bottom:1px solid var(--rule2);height:27px;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lt td.no{font-family:var(--mono);font-size:10px;color:var(--ink2)}
+.lt td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.lt td.sales{font-family:var(--mono);text-align:right;color:var(--green-d);font-weight:600;font-variant-numeric:tabular-nums}
+.lt td.rh{background:#F7F9F8;color:#9BA9A1;text-align:center;font-family:var(--mono);font-size:10px;width:26px;padding:0}
+.lt input[type=number]{width:46px;font-family:var(--mono);font-size:11px;padding:1px 3px;border:1px solid var(--rule);background:#fff;text-align:right;color:var(--ink);-moz-appearance:textfield}
+.lt input[type=number]:focus{outline:2px solid var(--green);outline-offset:-1px}
+.lt td.ref{background:#FFF7E6;box-shadow:inset 0 -2px 0 #E5B25E}
+.lab-title{font-family:var(--mono);font-size:10.5px;color:var(--ink2);margin:0 0 5px;letter-spacing:.05em}
+.lab-formula{font-family:var(--mono);font-size:clamp(11px,2.4vw,12.5px);background:var(--green-w);color:var(--green-d);padding:8px 9px;border-left:2px solid var(--green);word-break:break-all;line-height:1.6}
+.lab-value{font-size:26px;font-weight:800;color:var(--green-d);margin:12px 0 0;line-height:1.15;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.lab-value small{font-size:11.5px;font-weight:500;color:var(--ink2);margin-left:5px;letter-spacing:0}
+.lab-desc{font-size:12.5px;line-height:1.8;color:var(--ink2);margin:10px 0 0}
+.lab-desc b{color:var(--ink);font-weight:600}
+.lab-note{font-size:11.5px;color:var(--amber);margin-top:10px;background:var(--amber-w);padding:6px 8px;line-height:1.65}
+
+/* ============ 透视表搭建器 ============ */
+.pivot{border:1px solid var(--rule);background:#fff;border-radius:2px;overflow:hidden;margin-top:14px}
+.piv-top{padding:10px 12px;border-bottom:1px solid var(--rule2);background:#F9FBFA}
+.piv-top h4{margin:0 0 8px;font-size:10.5px;font-family:var(--mono);color:var(--ink2);letter-spacing:.05em;font-weight:600}
+.fields{display:grid;gap:4px}
+@media(min-width:620px){.fields{grid-template-columns:1fr 1fr;gap:4px 10px}}
+.frow{display:flex;align-items:center;gap:6px;padding:3px 8px;border:1px solid var(--rule2);background:#fff}
+.frow .fname2{flex:1 1 auto;min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbtns{display:flex;gap:2px;flex:0 0 auto}
+.fbtn{appearance:none;border:1px solid var(--rule);background:#fff;font-family:var(--sans);font-size:10.5px;padding:1px 6px;cursor:pointer;color:var(--ink2);border-radius:2px;line-height:1.6}
+.fbtn:hover{border-color:var(--green);color:var(--green-d)}
+.fbtn.on{background:var(--green);border-color:var(--green);color:#fff}
+.piv-mid{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--rule2);font-size:11.5px;color:var(--ink2)}
+.piv-mid select{font-family:var(--sans);font-size:11.5px;padding:2px 5px;border:1px solid var(--rule);background:#fff;color:var(--ink);border-radius:2px}
+.zones{display:grid;gap:7px;padding:11px 12px}
+@media(min-width:760px){.zones{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.zone{border:1px dashed #C4D3CB;min-height:64px;padding:5px 7px;background:#FCFDFC}
+.zone h4{margin:0 0 5px;font-size:9.5px;font-family:var(--mono);color:#8B9A92;letter-spacing:.07em;font-weight:600}
+.zone .empty{font-size:10.5px;color:#A9B7AF}
+.zchip{display:inline-flex;align-items:center;gap:4px;background:var(--green-w);color:var(--green-d);font-size:11px;padding:1px 5px;margin:0 3px 3px 0;border-radius:2px;font-weight:600}
+.zdel{appearance:none;border:0;background:none;cursor:pointer;color:#6E8C7B;font-size:12px;padding:0 1px;line-height:1}
+.zdel:hover{color:var(--red)}
+.zsel{font-family:var(--sans);font-size:10.5px;border:1px solid #BFD3C7;background:#fff;color:var(--green-d);padding:0 2px;margin-right:2px;border-radius:2px;max-width:88px}
+.piv-out{padding:10px 12px 14px;overflow-x:auto}
+.pv{width:100%;border-collapse:collapse;font-size:12px;min-width:300px}
+.pv th{background:#F3F6F4;font-weight:600;padding:5px 7px;border:1px solid var(--rule);text-align:right;color:#4E5E55;font-size:11px}
+.pv th.rowh{text-align:left}
+.pv td{padding:4px 7px;border:1px solid var(--rule2);text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--ink)}
+.pv td.rowh{text-align:left;font-family:var(--sans);color:var(--ink)}
+.pv tr.total td{font-weight:700;background:#F7FBF9;color:var(--green-d)}
+.pv-hint{font-size:11.5px;color:var(--ink2);margin:8px 0 0;line-height:1.7}
+.pv-empty{font-size:12px;color:var(--ink2);padding:16px 4px;text-align:center;background:#FCFDFC;border:1px dashed #C4D3CB}
+
+/* ============ 学习法 ============ */
+.method{border-top:1px solid var(--rule2);margin-top:8px}
+.mstep{display:grid;grid-template-columns:24px minmax(0,1fr);gap:12px;padding:16px 0;border-bottom:1px solid var(--rule2)}
+.mstep .mn{font-family:var(--mono);font-size:11px;color:var(--green-d);border:1px solid var(--rule);width:22px;height:22px;display:flex;align-items:center;justify-content:center;margin-top:3px;background:#fff}
+.mstep h3{margin:0 0 5px;font-size:15px;font-weight:700}
+.mstep p{margin:0;font-size:13.5px;line-height:1.8;color:var(--ink2)}
+.mstep p b{color:var(--ink)}
+.ai-box{border:1px solid var(--rule);background:#fff;margin-top:10px}
+.ai-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 9px;border-bottom:1px solid var(--rule2);font-size:10.5px;font-family:var(--mono);color:var(--ink2)}
+.ai-text{padding:9px 10px;font-size:12.5px;line-height:1.75;color:var(--ink);white-space:pre-wrap;background:#FCFDFC;font-family:var(--sans)}
+.copy-btn{appearance:none;border:1px solid var(--rule);background:#fff;font-family:var(--sans);font-size:10.5px;padding:1px 7px;cursor:pointer;color:var(--ink2);border-radius:2px}
+.copy-btn:hover{border-color:var(--green);color:var(--green-d)}
+.copy-btn.done{border-color:var(--green);color:var(--green-d);background:var(--green-w)}
+
+/* ============ 避坑表 ============ */
+.pit-wrap{overflow-x:auto;border:1px solid var(--rule);border-radius:2px;background:#fff}
+.pit{width:100%;border-collapse:collapse;font-size:12.5px;min-width:600px}
+.pit th{background:var(--green);color:#fff;font-weight:600;font-size:11px;padding:7px 8px;text-align:left;letter-spacing:.02em}
+.pit td{padding:7px 8px;border-bottom:1px solid var(--rule2);vertical-align:top;line-height:1.6;color:var(--ink2)}
+.pit td.sym{font-family:var(--mono);font-size:11.5px;color:var(--red);font-weight:700;white-space:nowrap}
+.pit td.cause{color:var(--ink)}
+.pit col:nth-child(1){width:16%}
+.pit col:nth-child(2){width:24%}
+.pit col:nth-child(3){width:34%}
+.pit col:nth-child(4){width:26%}
+
+/* ============ 打卡 ============ */
+.ckwrap{border:1px solid var(--rule);background:#fff;padding:14px 16px 16px;border-radius:2px}
+.ckhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11.5px;font-family:var(--mono);color:var(--ink2);margin-bottom:4px}
+.ckhead b{color:var(--green-d)}
+.prog{height:5px;background:#E7EDE9;position:relative;margin:0 0 10px}
+.prog i{display:block;height:5px;background:var(--green);width:0;transition:width .3s ease}
+.cklab{display:flex;gap:9px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--rule2);cursor:pointer;font-size:13px;line-height:1.6;color:var(--ink2)}
+.cklab:last-child{border-bottom:0}
+.cklab input{width:16px;height:16px;accent-color:var(--green);margin:3px 0 0;flex:0 0 auto;cursor:pointer}
+.cklab input:checked + span{color:#94A39A;text-decoration:line-through}
+.cklab span b{color:var(--ink);font-weight:600}
+
+/* ============ 练习表下载 ============ */
+.dl{display:grid;gap:10px;margin-top:6px}
+@media(min-width:700px){.dl{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.dlcard{border:1px solid var(--rule);background:#fff;padding:13px 14px 14px;display:flex;flex-direction:column;gap:6px;border-radius:2px}
+.dlcard .no{font-family:var(--mono);font-size:10px;color:var(--green-d);letter-spacing:.06em}
+.dlcard h4{margin:0;font-size:14px;font-weight:700;line-height:1.4}
+.dlcard .meta{font-family:var(--mono);font-size:10.5px;color:var(--ink2)}
+.dlcard p{margin:0;font-size:12.5px;line-height:1.7;color:var(--ink2);flex:1 1 auto}
+.dlbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-top:4px;background:var(--green);color:#fff;font-size:12.5px;padding:7px 10px;border:0;border-bottom:0;border-radius:2px;text-decoration:none;min-height:38px}
+.dlbtn:hover{background:var(--green-d);color:#fff;border-bottom:0}
+
+/* ============ 页脚与底部工作表标签 ============ */
+.foot{border-top:1px solid var(--rule);padding:22px 0 26px;font-size:12px;line-height:1.85;color:var(--ink2)}
+.foot p{margin:0 0 6px}
+.sheettabs{
+  position:sticky;bottom:0;z-index:60;display:flex;align-items:stretch;
+  height:38px;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);
+  border-top:1px solid var(--rule);overflow-x:auto;padding:0 6px;
+  scrollbar-width:none;
+}
+.sheettabs::-webkit-scrollbar{display:none}
+.sheettab{display:flex;align-items:center;padding:0 11px;font-size:12px;color:var(--ink2);white-space:nowrap;text-decoration:none;border-bottom:2px solid transparent;flex:0 0 auto}
+.sheettab:hover{color:var(--green-d);background:#F7FBF9}
+.sheettab.on{color:var(--green-d);font-weight:700;border-bottom-color:var(--green);background:#fff}
+
+/* ============ 小屏收口 ============ */
+@media(max-width:520px){
+  main{padding:0 14px 84px}
+  .sec{grid-template-columns:22px minmax(0,1fr);column-gap:8px;padding:30px 0 34px}
+  .lead{font-size:15px}
+  .spec-row{grid-template-columns:64px minmax(0,1fr)}
+  .spec-k{font-size:11px;padding:8px 6px}
+  .spec-v{font-size:12.5px;padding:8px 10px}
+  .tl-row{grid-template-columns:42px 15px minmax(0,1fr);column-gap:8px;padding-bottom:26px}
+  .tl-axis::before{bottom:-26px}
+  .tl-day b{font-size:11.5px}
+  .tl-day span{display:none}
+  .layer{grid-template-columns:26px minmax(0,1fr);column-gap:11px;padding:16px 0}
+  .layer p{font-size:13.5px}
+  .tl-body h3{font-size:15px}
+  .ftable{font-size:12px}
+  .ckwrap{padding:12px}
+  .ai-text{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .mc.fill,.mc.hot{animation:none;opacity:1}
+  .mfx .fxt .typed{animation:none;width:auto}
+  .caret{animation:none}
+  .mbfill{transition:none}
+  .prog i{transition:none}
+}
+@keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes hotIn{from{background:#FFF3D6}to{background:var(--green-w)}}
+@keyframes typein{from{width:0}to{width:6.2ch}}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+</style>
+</head>
+<body>
+
+<header class="bar" aria-label="当前位置">
+  <div class="namebox" id="barRef">A1</div>
+  <div class="fxmark">fx</div>
+  <div class="fxval" id="barVal"><b>Excel 一周速成</b> · 工具 / 函数 / 透视表</div>
+  <div class="bar-tally" id="barTally">已学 0 / 14</div>
+</header>
+
+<main>
+
+<!-- ===== 01 首屏 ===== -->
+<section class="sec hero" id="s1" data-ref="A1" data-name="总览">
+  <div class="rn">1</div>
+  <div class="hero-in">
+    <div class="hero-copy">
+      <h1 class="h1">一周，<br>把 Excel 学到<em>能干活</em></h1>
+      <p class="hero-lead">不用背几百个函数。会三类东西就够：<b>它自带的按钮</b>、<b>真正替你算数的函数</b>、<b>把明细变成结论的透视表</b>。剩下的，是每天动手做一遍。</p>
+      <div class="spec" role="table" aria-label="课程参数">
+        <div class="spec-row"><div class="spec-k">周期</div><div class="spec-v">7 天，每天 60–90 分钟</div></div>
+        <div class="spec-row"><div class="spec-k">核心</div><div class="spec-v">26 个按钮 · 18 个函数 · 1 张透视表</div></div>
+        <div class="spec-row"><div class="spec-k">适合</div><div class="spec-v">会往格子里填数，但不会算、不会汇总的人</div></div>
+        <div class="spec-row"><div class="spec-k">准备</div><div class="spec-v">Excel 2016 以上，或 WPS 最新版</div></div>
+      </div>
+    </div>
+
+    <div class="mock" id="heroMock">
+      <div class="mock-bar">
+        <div class="mtabs"><span class="mtab on">开始</span><span class="mtab">插入</span><span class="mtab">数据</span></div>
+        <div class="mfx">
+          <span class="box">D2</span>
+          <span class="fxi">fx</span>
+          <span class="fxt"><span class="typed" id="heroFormula">=B2*C2</span><span class="caret"></span></span>
+        </div>
+      </div>
+      <div class="mgrid" aria-hidden="true">
+        <div class="mh corner"></div>
+        <div class="mh">A</div><div class="mh">B</div><div class="mh">C</div><div class="mh">D</div>
+
+        <div class="mc rh">1</div>
+        <div class="mc fill" style="--d:0s;background:#EDF4F0;font-size:11px;color:#0A5B30">产品</div>
+        <div class="mc fill num" style="--d:.05s;background:#EDF4F0;font-size:11px;color:#0A5B30">单价</div>
+        <div class="mc fill num" style="--d:.1s;background:#EDF4F0;font-size:11px;color:#0A5B30">数量</div>
+        <div class="mc fill num" style="--d:.15s;background:#EDF4F0;font-size:11px;color:#0A5B30">销售额</div>
+
+        <div class="mc rh">2</div>
+        <div class="mc fill" style="--d:.35s">便携音箱</div>
+        <div class="mc fill num" style="--d:.4s">299</div>
+        <div class="mc fill num" style="--d:.45s">18</div>
+        <div class="mc hot num">5,382</div>
+
+        <div class="mc rh">3</div>
+        <div class="mc fill" style="--d:.45s">便携音箱</div>
+        <div class="mc fill num" style="--d:.5s">299</div>
+        <div class="mc fill num" style="--d:.55s">26</div>
+        <div class="mc fill num" style="--d:2.7s;background:#EAF4EE;color:#0A5B30">7,774</div>
+
+        <div class="mc rh">4</div>
+        <div class="mc fill" style="--d:.55s">智能手环</div>
+        <div class="mc fill num" style="--d:.6s">199</div>
+        <div class="mc fill num" style="--d:.65s">35</div>
+        <div class="mc fill num" style="--d:2.8s;background:#EAF4EE;color:#0A5B30">6,965</div>
+
+        <div class="mc rh">5</div>
+        <div class="mc fill" style="--d:.65s">智能手环</div>
+        <div class="mc fill num" style="--d:.7s">199</div>
+        <div class="mc fill num" style="--d:.75s">12</div>
+        <div class="mc fill num" style="--d:2.9s;background:#EAF4EE;color:#0A5B30">2,388</div>
+
+        <div class="mc rh">6</div>
+        <div class="mc fill" style="--d:.75s">桌面支架</div>
+        <div class="mc fill num" style="--d:.8s">89</div>
+        <div class="mc fill num" style="--d:.85s">40</div>
+        <div class="mc fill num" style="--d:3s;background:#EAF4EE;color:#0A5B30">3,560</div>
+
+        <div class="mc rh">7</div>
+        <div class="mc fill" style="--d:.85s">桌面支架</div>
+        <div class="mc fill num" style="--d:.9s">89</div>
+        <div class="mc fill num" style="--d:.95s">22</div>
+        <div class="mc fill num" style="--d:3.1s;background:#EAF4EE;color:#0A5B30">1,958</div>
+      </div>
+      <div class="mock-chart">
+        <div class="mcaprow"><b>数据透视表 · 区域 → 销售额</b><span>示例数据 24 条</span></div>
+        <div class="mbars" id="heroBars"></div>
+        <p class="mock-note"><span class="num">1</span><span>填数 → 公式算列 → 透视表出结论。这条线就是这七天的全部内容。<button class="replay" id="replay" type="button">重播</button></span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 02 三类能力 ===== -->
+<section class="sec" id="s2" data-ref="A24" data-name="Excel 的三类能力">
+  <div class="rn">24</div>
+  <div>
+    <h2 class="h2">Excel 其实只有三类能力</h2>
+    <p class="lead">想清楚这件事，学习量立刻从「几千个功能」缩到「三件事」。顺序别反：先能整理数据，才谈得上算；算出来是数字，摆进透视表才是结论。</p>
+    <div class="layers">
+      <div class="layer">
+        <span class="layer-n">1</span>
+        <div>
+          <h3>工具类<span>打开就有，但要认得</span></h3>
+          <p>就像剪映打开就带着的剪辑、字幕、转场。Excel 的筛选、排序、单元格设置、条件格式、冻结窗格，都是<b>自带功能，不用学原理</b>。难点不在难，在藏得深：筛选在「数据」选项卡，冻结窗格在「视图」里，条件格式在「开始」里。</p>
+          <p class="layer-foot">学到什么程度：想做一个动作，两秒内能在三个选项卡里找到它。</p>
+        </div>
+      </div>
+      <div class="layer">
+        <span class="layer-n">2</span>
+        <div>
+          <h3>函数<span>真正让它干活的部分</span></h3>
+          <p>表里一开始只有成本、单价、数量，销售额、利润、利润率都得你自己算出来——这就是函数。第一次听会懵，但常用的<b>不超过 20 个</b>：求和、条件求和、查找、判断、取文本、处理错误。吃下这 16 个，日常报表九成的活就没了。</p>
+          <p class="layer-foot">学到什么程度：听到「华东这个月卖了多少」，立刻知道用哪个函数、参数怎么写。</p>
+        </div>
+      </div>
+      <div class="layer">
+        <span class="layer-n">3</span>
+        <div>
+          <h3>数据透视表<span>把算好的数变成结论</span></h3>
+          <p>函数给你一列数字，领导要的是「哪个区域卖得最好、哪个产品利润率最高」。透视表把明细按行、列、值重新摆一遍，几秒出交叉汇总。它本体也是工具类功能，但<b>用得太频繁</b>，值得单拎出来讲。</p>
+          <p class="layer-foot">学到什么程度：明细一交过来，就能在四步之内摆出一张能看懂的表。</p>
+        </div>
+      </div>
+    </div>
+    <p class="layers-note"><b>它们是一套：</b>工具负责把数据弄干净，函数负责算出指标列，透视表负责把这些列变成一句话结论。少了前一步，后面全是错的。</p>
+  </div>
+</section>
+
+<!-- ===== 03 七天路线 ===== -->
+<section class="sec" id="s3" data-ref="A48" data-name="7 天路线">
+  <div class="rn">48</div>
+  <div>
+    <h2 class="h2">七天，每天一件事</h2>
+    <p class="lead">每天 60–90 分钟：20 分钟看、50 分钟动手、10 分钟复述。每一天都有<b>明确产出</b>，产出没有，就别进下一天。</p>
+    <div class="tl">
+
+      <div class="tl-row">
+        <div class="tl-day"><b>Day 1</b><span>60 分钟</span></div>
+        <div class="tl-axis"><i class="dot"></i></div>
+        <div class="tl-body">
+          <h3>先认识界面，再守三条建表铁律</h3>
+          <ul>
+            <li>认清四件套：<b>名称框</b>（左上角显示你在哪格）、<b>编辑栏</b>（写公式的地方）、行号列标、工作表标签</li>
+            <li>铁律一 一行一条记录；铁律二 表头只占一行；铁律三 不合并单元格</li>
+            <li>打开练习表，先不动数据，只看结构——好表的样子</li>
+          </ul>
+          <div class="tl-out">产出：能指出自己手上那张表哪里不规范</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-day"><b>Day 2</b><span>90 分钟</span></div>
+        <div class="tl-axis"><i class="dot"></i></div>
+        <div class="tl-body">
+          <h3>工具类速通：把功能区过一遍</h3>
+          <ul>
+            <li><b>筛选和排序</b>别搞混：一个把行藏起来，一个把行挪位置</li>
+            <li><b>条件格式</b>让数字自己变色；<b>冻结窗格</b>让表头不跑</li>
+            <li>查找替换、删除重复项、分列：脏数据的三个急救包</li>
+          </ul>
+          <div class="tl-out">产出：工具练习表 8 个任务全部做完</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-day"><b>Day 3</b><span>90 分钟</span></div>
+        <div class="tl-axis"><i class="dot"></i></div>
+        <div class="tl-body">
+          <h3>函数入门：先把三条指标算出来</h3>
+          <ul>
+            <li>公式的结构：<b>= 函数名(参数, 参数)</b>，等号必须有</li>
+            <li>相对引用 A1 与绝对引用 $A$1 —— 复制公式出错，九成在这里</li>
+            <li>SUM / AVERAGE / MAX / ROUND，加上最朴素的乘法列</li>
+          </ul>
+          <div class="tl-out">产出：销售额、利润、利润率三列算对（函数练习 1–4 题）</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-day"><b>Day 4</b><span>80 分钟</span></div>
+        <div class="tl-axis"><i class="dot"></i></div>
+        <div class="tl-body">
+          <h3>条件汇总：回答「华东卖了多少」</h3>
+          <ul>
+            <li><b>SUMIF / SUMIFS</b>：按区域、按产品、按多个条件汇总</li>
+            <li><b>COUNTIF / COUNTIFS</b>：数单量，比求和更常用</li>
+            <li><b>AVERAGEIF</b>：算平均单价，避开平均值陷阱</li>
+          </ul>
+          <div class="tl-out">产出：一张 4 行的区域汇总表（函数练习 5–8 题）</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-day"><b>Day 5</b><span>90 分钟</span></div>
+        <div class="tl-axis"><i class="dot"></i></div>
+        <div class="tl-body">
+          <h3>查找与判断：让表会说人话</h3>
+          <ul>
+            <li><b>VLOOKUP</b> 四个参数，最后一个永远写 0</li>
+            <li><b>XLOOKUP</b> 新版更好用，还能向左查；老版本用 INDEX + MATCH</li>
+            <li><b>IF / IFS / IFERROR</b>：达标判断、多档评级、把错误变成提示</li>
+          </ul>
+          <div class="tl-out">产出：汇总表升级成带「达标 / 未达标」的版本（9–12 题）</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-day"><b>Day 6</b><span>90 分钟</span></div>
+        <div class="tl-axis"><i class="dot"></i></div>
+        <div class="tl-body">
+          <h3>数据透视表：四步出结论</h3>
+          <ul>
+            <li>记住四个盒子：<b>行、列、值、筛选</b>，字段往里拖</li>
+            <li>值的汇总方式（求和 / 平均 / 计数）与百分比显示</li>
+            <li><b>切片器</b>：让领导自己点，不用你再做一遍</li>
+          </ul>
+          <div class="tl-out">产出：透视练习表上 5 张透视表</div>
+        </div>
+      </div>
+
+      <div class="tl-row last">
+        <div class="tl-day"><b>Day 7</b><span>90 分钟</span></div>
+        <div class="tl-axis"><i class="dot"></i></div>
+        <div class="tl-body">
+          <h3>综合实战：把自己那张烂表救回来</h3>
+          <ul>
+            <li>拿你真实工作里的表，按三条铁律重排结构</li>
+            <li>补三列指标，再做一页透视 + 一个图</li>
+            <li>结论写成一句话放在最上面，别只丢一堆数字</li>
+          </ul>
+          <div class="tl-out">产出：一页能直接发出去的月度分析</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== 04 模块一：工具类 ===== -->
+<section class="sec" id="s4" data-ref="A96" data-name="第一类 · 工具">
+  <div class="rn">96</div>
+  <div>
+    <h2 class="h2">第一类 · 工具：先认得它自带的按钮</h2>
+    <p class="lead">这些功能不用学原理，只要认位置。下面是一张还原的选项卡，<b>点任意按钮</b>，看它在哪个选项卡、哪一组、什么时候用。</p>
+
+    <div class="ribbon" id="ribbon">
+      <div class="rtabs" id="rtabs" role="tablist"></div>
+      <div id="rpanels"></div>
+    </div>
+    <div class="tool-panel" id="toolPanel" aria-live="polite">
+      <p class="tp-title">先点一个按钮</p>
+      <p class="tp-loc">例如「筛选」：位置 · 一句话 · 什么时候用</p>
+      <p class="tp-body">每一个按钮都写了它藏在哪。你不需要背菜单结构，只需要在需要它的时候，两秒内想起来它在哪一栏。</p>
+    </div>
+
+    <div class="sub-h">三个最容易搞混的动作</div>
+    <div class="layers">
+      <div class="layer">
+        <span class="layer-n">A</span>
+        <div>
+          <h3>筛选<span>把行藏起来</span></h3>
+          <p>数据没少，也没动，只是不符合条件的行暂时看不见。取消筛选，行原样回来。<b>筛选不改变任何值</b>，只改变你看到哪几行。</p>
+        </div>
+      </div>
+      <div class="layer">
+        <span class="layer-n">B</span>
+        <div>
+          <h3>排序<span>把行挪位置</span></h3>
+          <p>整行一起动，行号全变。危险在于：只选中一列排序，会把别的列错配——<b>数量跑到别人家的订单上</b>。所以排序前按 Ctrl+A 选整张表，或确认弹窗里选「扩展选定区域」。</p>
+        </div>
+      </div>
+      <div class="layer">
+        <span class="layer-n">C</span>
+        <div>
+          <h3>条件格式<span>让数字自己变色</span></h3>
+          <p>手动刷底色是一次性的，改完数就废了。条件格式是给格子定规矩：数量 ≥ 30 就变红。数字一改，颜色自己跟着变——这才叫表会说话。</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="layers-note"><b>先记这 6 个键盘动作，比记菜单快：</b><code class="kbd">Ctrl+Shift+L</code> 开关筛选 · <code class="kbd">Ctrl+F</code> 查找 · <code class="kbd">F4</code> 把 A1 变成 $A$1 · <code class="kbd">Ctrl+1</code> 单元格格式 · <code class="kbd">Alt+Enter</code> 格内换行 · <code class="kbd">Ctrl+↑</code> 跳到数据最后一行。</p>
+  </div>
+</section>
+
+<!-- ===== 05 模块二：函数 ===== -->
+<section class="sec" id="s5" data-ref="A148" data-name="第二类 · 函数">
+  <div class="rn">148</div>
+  <div>
+    <h2 class="h2">第二类 · 函数：真正让它干活的部分</h2>
+    <p class="lead">这是七天的重头。原始表只有成本、单价、数量，销售额、利润、利润率都得自己算——靠的就是函数。别被「几百个函数」吓住，<b>日常能用到的不到 20 个</b>。</p>
+
+    <div class="sub-h">先看懂一条公式</div>
+    <div class="fbreak">
+      <div class="fbcode"><span class="p1">=SUMIFS(</span><span class="p2">G2:G13,B2:B13,</span><span class="p3">"华东"</span><span class="p2">,F2:F13,</span><span class="p3">"&gt;=20"</span><span class="p1">)</span></div>
+      <div class="fblegend">
+        <div><i style="background:#0A5B30"></i><span><b>函数名和括号</b>：告诉 Excel 干什么。等号 <code>=</code> 必须写在最前面，不写它就只是一段文字。</span></div>
+        <div><i style="background:#8A5A00"></i><span><b>区域</b>：在哪儿算、在哪儿找。写法是「起点:终点」，如 <code>G2:G13</code>。</span></div>
+        <div><i style="background:#AB3A2B"></i><span><b>条件</b>：找什么。文字和大于小于这类条件都要用<b>英文双引号</b>包住，中文引号会直接报错。</span></div>
+      </div>
+      <p class="fbnote">三个标点记住就够：<code>逗号</code>分隔参数，<code>双引号</code>包文本，<code>括号</code>要成对。</p>
+    </div>
+
+    <div class="sub-h">$ 那点事：为什么一复制公式就错</div>
+    <div class="ftable-wrap" style="border:0;background:transparent">
+      <table class="refgrid">
+        <colgroup><col><col><col></colgroup>
+        <thead><tr><th>写法</th><th>叫什么</th><th>复制到别的格子会怎样</th></tr></thead>
+        <tbody>
+          <tr><td><code>A1</code></td><td>相对引用</td><td>行和列都跟着走。右下角拖一列，A1 变 B1；拖一行，变 A2。<b>普通公式都用它。</b></td></tr>
+          <tr><td><code>$A$1</code></td><td>绝对引用</td><td>钉死不动。无论复制到哪，永远指向 A1。<b>引用的固定参数（税率、单价表）用它。</b></td></tr>
+          <tr><td><code>$A1</code> / <code>A$1</code></td><td>混合引用</td><td>一半钉死一半跟着走。往下拖只变行、往右拖只变列。<b>做乘法表、二维对照表时用。</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fbnote">选中公式里的 A1，按 <code class="kbd">F4</code> 循环切换四种写法：A1 → $A$1 → A$1 → $A1。</p>
+
+    <div class="sub-h">18 个函数，点一行进实验室</div>
+    <div class="ftable-wrap">
+      <table class="ftable" id="fnTable">
+        <colgroup><col><col><col><col></colgroup>
+        <thead><tr><th>函数</th><th>干什么</th><th>怎么写</th><th>什么时候用</th></tr></thead>
+        <tbody id="fnBody"></tbody>
+      </table>
+    </div>
+
+    <div class="lab" id="lab">
+      <div class="lab-head">
+        <span class="lh">函数实验室 · <b id="labFn">SUM</b></span>
+        <span class="lab-hint">改表里的<b>数量</b>，右边结果立刻重算</span>
+      </div>
+      <div class="lab-grid">
+        <div class="lab-tblwrap">
+          <table class="lt" id="labTable">
+            <colgroup><col style="width:26px"><col style="width:86px"><col style="width:42px"><col style="width:62px"><col style="width:42px"><col style="width:42px"><col style="width:44px"><col style="width:56px"></colgroup>
+            <thead><tr><th></th><th>A 订单号</th><th>B 区域</th><th>C 产品</th><th>D 单价</th><th>E 成本</th><th>F 数量</th><th>G 销售额</th></tr></thead>
+            <tbody id="labBody"></tbody>
+          </table>
+        </div>
+        <div class="lab-side">
+          <p class="lab-title">当前公式（示范）</p>
+          <div class="lab-formula" id="labFormula">=SUM(G2:G13)</div>
+          <div class="lab-value" id="labValue">—</div>
+          <p class="lab-desc" id="labDesc"></p>
+          <p class="lab-note" id="labNote"></p>
+        </div>
+      </div>
+    </div>
+    <p class="fbnote">这张小表的行号和列标都是真的：<code>G2:G13</code> 指的就是销售额那一列的第 2 到第 13 行。改数量，等于改 F 列，公式结果自然跟着变。</p>
+
+    <div class="sub-h">练到什么程度才算会</div>
+    <p class="prose">不是「看懂了」，而是：<b>关掉教程，能在 30 秒内写出公式并得到正确结果</b>。做不到就回去重写一遍。具体怎么练，看<a href="#s7">第 7 节的学习法</a>。</p>
+  </div>
+</section>
+
+<!-- ===== 06 模块三：数据透视表 ===== -->
+<section class="sec" id="s6" data-ref="A224" data-name="第三类 · 数据透视表">
+  <div class="rn">224</div>
+  <div>
+    <h2 class="h2">第三类 · 数据透视表：把数字变成结论</h2>
+    <p class="lead">函数给你一列列数字，领导要的是「哪个区域卖得最好、哪个产品利润率最高」。透视表不用写公式，<b>把字段拖进四个盒子</b>，几秒就出一张交叉汇总表。</p>
+
+    <div class="sub-h">四个盒子，各管一件事</div>
+    <div class="layers">
+      <div class="layer">
+        <span class="layer-n">行</span>
+        <div>
+          <h3>行<span>按什么分组</span></h3>
+          <p>放「区域」「产品」「销售员」这类分类字段。<b>每多一个行字段，就多一层分组</b>：先按区域、区域内再按产品。</p>
+        </div>
+      </div>
+      <div class="layer">
+        <span class="layer-n">列</span>
+        <div>
+          <h3>列<span>横向对比什么</span></h3>
+          <p>放第二个分类字段，比如「产品」。行 × 列就形成交叉表，一眼看出哪个组合最强。<b>列不是必须的</b>，只有一个维度时留空就行。</p>
+        </div>
+      </div>
+      <div class="layer">
+        <span class="layer-n">值</span>
+        <div>
+          <h3>值<span>算哪个数</span></h3>
+          <p>放数值字段，并选汇总方式：求和、平均值、计数、占比。同一个字段可以有多种算法，<b>利润放求和、利润率放平均值</b>，别搞反。</p>
+        </div>
+      </div>
+      <div class="layer">
+        <span class="layer-n">筛</span>
+        <div>
+          <h3>筛选<span>先砍掉不要的</span></h3>
+          <p>放「区域」「月份」等，先缩小范围再看明细。<b>想看全国就清空筛选</b>，不用重做一张表。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-h">自己搭一张：点字段，选盒子</div>
+    <div class="pivot" id="pivot">
+      <div class="piv-top">
+        <h4>① 给每个字段指定一个盒子</h4>
+        <div class="fields" id="pivFields"></div>
+      </div>
+      <div class="piv-mid">
+        <label>值字段
+          <select id="pvVal">
+            <option value="sales">销售额</option>
+            <option value="profit">利润</option>
+            <option value="qty">数量</option>
+            <option value="rate">利润率</option>
+          </select>
+        </label>
+        <label>汇总方式
+          <select id="pvAgg">
+            <option value="sum">求和</option>
+            <option value="avg">平均值</option>
+            <option value="count">计数</option>
+          </select>
+        </label>
+        <button class="fbtn" id="pivReset" type="button">还原成默认</button>
+      </div>
+      <div class="zones">
+        <div class="zone" data-zone="rows"><h4>行</h4><div class="zbody" id="zRows"></div></div>
+        <div class="zone" data-zone="cols"><h4>列</h4><div class="zbody" id="zCols"></div></div>
+        <div class="zone" data-zone="vals"><h4>值</h4><div class="zbody" id="zVals"></div></div>
+        <div class="zone" data-zone="filters"><h4>筛选</h4><div class="zbody" id="zFilters"></div></div>
+      </div>
+      <div class="piv-out" id="pivOut"></div>
+    </div>
+    <p class="fbnote">左边这张表用的是<b>示例 24 条明细</b>（和练习表同一批数据的结构）。你在这里点出来的结果，就是 Excel 里拖完字段后看到的东西。</p>
+
+    <div class="sub-h">四个必须会的设置</div>
+    <div class="layers">
+      <div class="layer">
+        <span class="layer-n">1</span>
+        <div>
+          <h3>值汇总方式<span>求和 ≠ 平均</span></h3>
+          <p>右键「值」字段 → 值字段设置，切换求和 / 计数 / 平均值。<b>利润率这类比率字段必须用平均值</b>，用求和会得到一个离谱的数。</p>
+        </div>
+      </div>
+      <div class="layer">
+        <span class="layer-n">2</span>
+        <div>
+          <h3>百分比显示<span>占比比绝对值有用</span></h3>
+          <p>再点「值显示方式」→「占总计百分比」，就得到各区域占比。领导最爱看这个，比一堆金额直观。</p>
+        </div>
+      </div>
+      <div class="layer">
+        <span class="layer-n">3</span>
+        <div>
+          <h3>按月分组<span>日期要先是真日期</span></h3>
+          <p>日期列必须是真正的日期格式（不是文本），透视表才能自动分组成年/季/月。文本日期只能一行一个月，会累死。</p>
+        </div>
+      </div>
+      <div class="layer">
+        <span class="layer-n">4</span>
+        <div>
+          <h3>切片器<span>让别人自己点</span></h3>
+          <p>分析 → 插入切片器，勾上「销售员」。它就是一个大按钮板，点谁看谁。<b>比反复改筛选省事得多</b>，也显得专业。</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="layers-note"><b>和函数的分工：</b>函数负责在明细表里算出「销售额、利润、利润率」这些<b>列</b>；透视表负责把这些列按维度<b>汇总成结论</b>。所以顺序永远是：先算列，再做透视。</p>
+  </div>
+</section>
+
+<!-- ===== 07 学习法 ===== -->
+<section class="sec" id="s7" data-ref="A288" data-name="怎么练才有效">
+  <div class="rn">288</div>
+  <div>
+    <h2 class="h2">只看，是学不会 Excel 的</h2>
+    <p class="lead">跟着视频点头的时候，大脑处理的是「听懂」，不是「会用」。真正拉开差距的，是<b>关掉教程之后你还做不做得出来</b>。</p>
+
+    <div class="method">
+      <div class="mstep">
+        <span class="mn">1</span>
+        <div>
+          <h3>看一遍，不做笔记</h3>
+          <p>只搞清楚一件事：<b>这个函数解决什么问题</b>。参数顺序先别背，做的时候现查。笔记写太多，手就没在动。</p>
+        </div>
+      </div>
+      <div class="mstep">
+        <span class="mn">2</span>
+        <div>
+          <h3>关掉教程，从空表开始重做</h3>
+          <p>这是唯一标准。<b>做不出来就回去看，但只看卡住的那一步</b>。同一题连续做三遍，中间隔一天再做第四遍，才算进脑子。</p>
+        </div>
+      </div>
+      <div class="mstep">
+        <span class="mn">3</span>
+        <div>
+          <h3>让 AI 出题，换数据换条件</h3>
+          <p>你会的往往是「那一道题」，不是「这个函数」。让豆包或 DeepSeek 用<b>不同的数据、不同的条件</b>再出 3 道，你才会真的迁移。</p>
+          <div class="ai-box">
+            <div class="ai-h"><span>出题模板 · 直接复制给豆包 / DeepSeek</span><button class="copy-btn" type="button" data-copy="tpl1">复制</button></div>
+            <div class="ai-text" id="tpl1">我在学 Excel 的 SUMIFS 函数，已经会用「求和区域 + 多组条件区域与条件」的写法。
+请给我一份可以直接粘贴进 Excel 的练习数据，要求：
+1）20 行左右，字段是：日期、区域、产品、单价、成本、数量；
+2）再给我 5 道由易到难的题，只描述需求（比如「华东且数量大于 20 的销售额合计」），不要给答案；
+3）最后单独列出 5 道题的参考答案公式，并在每道题下标出最容易错的地方。
+不要用合并单元格，表头只占一行。</div>
+          </div>
+        </div>
+      </div>
+      <div class="mstep">
+        <span class="mn">4</span>
+        <div>
+          <h3>用 AI 判错，比自己盯半天快</h3>
+          <p>公式报错时，把<b>公式原文</b>和<b>单元格里显示的结果</b>一起贴给它，让它指出哪一段错了，再让你自己改。</p>
+          <div class="ai-box">
+            <div class="ai-h"><span>查错模板</span><button class="copy-btn" type="button" data-copy="tpl2">复制</button></div>
+            <div class="ai-text" id="tpl2">我的 Excel 公式报错了，请帮我定位错在哪一段，先不要直接给我最终公式。
+公式：=SUMIFS(G2:G13,B2:B13,&quot;华东&quot;,F2:F13,&quot;&gt;=20&quot;)
+单元格显示的结果：#VALUE!
+我的数据情况：G 列是销售额（数字），B 列是区域（文本），F 列是数量（数字），第 1 行是表头。
+请按「可能是哪一段 → 为什么 → 怎么改」的格式回答。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="layers-note"><b>每天 60 分钟怎么分：</b>20 分钟看 + 30 分钟动手 + 10 分钟合上电脑，用自己的话讲一遍「这个函数是干什么的、参数怎么填」。讲不出来，就是还没会。</p>
+  </div>
+</section>
+
+<!-- ===== 08 避坑 ===== -->
+<section class="sec" id="s8" data-ref="A332" data-name="八个常见错误">
+  <div class="rn">332</div>
+  <div>
+    <h2 class="h2">八个坑，几乎人人都踩过</h2>
+    <p class="lead">报错不可怕，看不懂报错才可怕。Excel 的错误值其实在直白地告诉你原因，只是它说的是英文缩写。</p>
+    <div class="pit-wrap">
+      <table class="pit">
+        <colgroup><col><col><col><col></colgroup>
+        <thead><tr><th>单元格显示</th><th>真实原因</th><th>怎么解决</th><th>以后怎么避免</th></tr></thead>
+        <tbody>
+          <tr><td class="sym">#N/A</td><td class="cause">查找值根本不存在</td><td>确认拼写、空格、前后是否有隐藏字符；VLOOKUP 最后参数写 0 才是精确匹配</td><td>查找前先确认两边写法一致，别用「近似匹配」兜底</td></tr>
+          <tr><td class="sym">#DIV/0!</td><td class="cause">分母是 0 或空单元格</td><td>算利润率时先判断销售额是否大于 0；或套 IFERROR 给出提示</td><td>比率类公式一律加 IFERROR，表才干净</td></tr>
+          <tr><td class="sym">#VALUE!</td><td class="cause">参数类型不对，常见是「数字存成了文本」</td><td>选中该列 → 数据 → 分列 → 直接点完成，可批量转成数字</td><td>导入数据后先检查数字是否右对齐（文本默认左对齐）</td></tr>
+          <tr><td class="sym">#REF!</td><td class="cause">公式引用的单元格被删了</td><td>撤销删除（Ctrl+Z），或重写引用区域</td><td>删行列前先确认没有公式引用它</td></tr>
+          <tr><td class="sym">数字左对齐</td><td class="cause">看着是数字，其实是文本</td><td>乘 1 或用 VALUE() 转换；也可用「分列」批量转</td><td>从系统导出的数据，先转数字再求和</td></tr>
+          <tr><td class="sym">求和偏小</td><td class="cause">表里有筛选，SUM 会把隐藏行一起算进去（其实这是对的），但 SUBTOTAL 才是「只算看得见的」</td><td>要只算筛选后的结果，用 <code>SUBTOTAL(109, 区域)</code></td><td>汇报筛选结果时，别用 SUM</td></tr>
+          <tr><td class="sym">拖不动公式</td><td class="cause">表里有合并单元格，区域是断的</td><td>取消合并、补齐内容，再重做</td><td>建表铁律：不合并单元格</td></tr>
+          <tr><td class="sym">循环引用</td><td class="cause">公式算的区域里包含了自己所在的格子</td><td>检查引用范围，把自身单元格排除掉</td><td>写 SUM 时别选整列（A:A），容易把自己圈进去</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fbnote">还有一条最省事的习惯：<b>公式只引用必要的区域</b>，不要整列引用（A:A）。整列引用会让文件越用越慢，几十万行时尤其明显。</p>
+  </div>
+</section>
+
+<!-- ===== 09 打卡 ===== -->
+<section class="sec" id="s9" data-ref="A364" data-name="七天打卡">
+  <div class="rn">364</div>
+  <div>
+    <h2 class="h2">七天打卡：做完才算学过</h2>
+    <p class="lead">每天两条，勾满 14 条就是真的走完一轮。<b>勾选状态保存在你自己的浏览器里</b>，关掉页面再回来还在。</p>
+    <div class="ckwrap">
+      <div class="ckhead"><span>进度</span><span><b id="ckCount">0</b> / 14</span></div>
+      <div class="prog"><i id="ckBar"></i></div>
+      <div id="ckList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 10 练习表 ===== -->
+<section class="sec" id="s10" data-ref="A396" data-name="配套练习表">
+  <div class="rn">396</div>
+  <div>
+    <h2 class="h2">配套的三份练习表</h2>
+    <p class="lead">光看这个网页没用，得打开文件动手。三份表对应三个阶段，里面的任务和答案都写好了。</p>
+    <div class="dl">
+      <div class="dlcard">
+        <span class="no">01 · DAY 1–2</span>
+        <h4>工具练习</h4>
+        <span class="meta">24 条明细 · 8 个任务 · 9.7 KB</span>
+        <p>表头、货币格式、冻结窗格、筛选、排序、查找、条件格式，8 个任务逐个做。附操作路径与要点。</p>
+        <a class="dlbtn" href="练习表/01-工具练习.xlsx" download>下载 01-工具练习.xlsx</a>
+      </div>
+      <div class="dlcard">
+        <span class="no">02 · DAY 3–5</span>
+        <h4>函数练习</h4>
+        <span class="meta">12 道题 · 参考答案 · 20 个函数速查 · 12.3 KB</span>
+        <p>销售额、利润、利润率三列留白，从乘法写到 SUMIFS、VLOOKUP、IFERROR。4 个页签：数据 / 题目 / 参考答案 / 函数速查。</p>
+        <a class="dlbtn" href="练习表/02-函数练习.xlsx" download>下载 02-函数练习.xlsx</a>
+      </div>
+      <div class="dlcard">
+        <span class="no">03 · DAY 6</span>
+        <h4>透视表源数据</h4>
+        <span class="meta">60 条干净明细 · 5 张透视任务 · 12.0 KB</span>
+        <p>一行一条记录、单行表头、无合并单元格，已经整理成 Excel 表格对象。5 个任务从各区域销售额做到切片器，附参考结果。</p>
+        <a class="dlbtn" href="练习表/03-透视表源数据.xlsx" download>下载 03-透视表源数据.xlsx</a>
+      </div>
+    </div>
+    <p class="fbnote">网页和「练习表」文件夹要放在一起，下载按钮才能正常打开文件。如果只把 HTML 单独发出去，按钮会失效——记得整个文件夹一起发。</p>
+  </div>
+</section>
+
+<div class="foot">
+  <p>课程内容按「工具 → 函数 → 透视表」三类组织，七天一轮。所有数据均为虚构的示例数据，只用于练习，不对应任何真实业务。</p>
+  <p>练习表可直接编辑，不会影响原始文件；建议每天学完复制一份，第二天用新副本继续。</p>
+</div>
+
+<!-- ANCHOR:NEXT -->
+
+</main>
+
+<nav class="sheettabs" aria-label="章节导航">
+  <a href="#s1" class="sheettab">总览</a>
+  <a href="#s2" class="sheettab">三类能力</a>
+  <a href="#s3" class="sheettab">7 天</a>
+  <a href="#s4" class="sheettab">工具</a>
+  <a href="#s5" class="sheettab">函数</a>
+  <a href="#s6" class="sheettab">透视表</a>
+  <a href="#s7" class="sheettab">学习法</a>
+  <a href="#s9" class="sheettab">打卡</a>
+  <a href="#s10" class="sheettab">练习表</a>
+</nav>
+
+<script>
+(function(){
+  'use strict';
+
+  var $ = function(s,r){ return (r||document).querySelector(s); };
+  var $$ = function(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+  var reduce = false;
+  try{ reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+
+  function money(n){ return '¥' + Math.round(n).toLocaleString('zh-CN'); }
+  function num(n){ return Math.round(n).toLocaleString('zh-CN'); }
+  function pct(n){ return (n*100).toFixed(1) + '%'; }
+
+  /* ---------- 数据（24 条示例明细） ---------- */
+  var DATA = [{"no":"HD-2601-001","d":"2026-01-05","region":"华东","prod":"便携音箱","price":299,"cost":180,"qty":18,"sales":5382,"profit":2142},{"no":"HN-2601-002","d":"2026-01-08","region":"华南","prod":"便携音箱","price":299,"cost":180,"qty":26,"sales":7774,"profit":3094},{"no":"HB-2601-003","d":"2026-01-11","region":"华北","prod":"智能手环","price":199,"cost":120,"qty":35,"sales":6965,"profit":2765},{"no":"XN-2601-004","d":"2026-01-14","region":"西南","prod":"智能手环","price":199,"cost":120,"qty":12,"sales":2388,"profit":948},{"no":"HD-2601-005","d":"2026-01-17","region":"华东","prod":"桌面支架","price":89,"cost":45,"qty":40,"sales":3560,"profit":1760},{"no":"HN-2601-006","d":"2026-01-20","region":"华南","prod":"桌面支架","price":89,"cost":45,"qty":22,"sales":1958,"profit":968},{"no":"HB-2601-007","d":"2026-01-23","region":"华北","prod":"移动电源","price":149,"cost":90,"qty":15,"sales":2235,"profit":885},{"no":"XN-2601-008","d":"2026-01-26","region":"西南","prod":"移动电源","price":149,"cost":90,"qty":30,"sales":4470,"profit":1770},{"no":"HD-2601-009","d":"2026-01-29","region":"华东","prod":"便携音箱","price":299,"cost":180,"qty":9,"sales":2691,"profit":1071},{"no":"HN-2602-010","d":"2026-02-01","region":"华南","prod":"便携音箱","price":299,"cost":180,"qty":24,"sales":7176,"profit":2856},{"no":"HB-2602-011","d":"2026-02-04","region":"华北","prod":"智能手环","price":199,"cost":120,"qty":33,"sales":6567,"profit":2607},{"no":"XN-2602-012","d":"2026-02-07","region":"西南","prod":"智能手环","price":199,"cost":120,"qty":20,"sales":3980,"profit":1580},{"no":"HD-2602-013","d":"2026-02-10","region":"华东","prod":"桌面支架","price":89,"cost":45,"qty":18,"sales":1602,"profit":792},{"no":"HN-2602-014","d":"2026-02-13","region":"华南","prod":"桌面支架","price":89,"cost":45,"qty":26,"sales":2314,"profit":1144},{"no":"HB-2602-015","d":"2026-02-16","region":"华北","prod":"移动电源","price":149,"cost":90,"qty":35,"sales":5215,"profit":2065},{"no":"XN-2602-016","d":"2026-02-19","region":"西南","prod":"移动电源","price":149,"cost":90,"qty":12,"sales":1788,"profit":708},{"no":"HD-2602-017","d":"2026-02-22","region":"华东","prod":"便携音箱","price":299,"cost":180,"qty":40,"sales":11960,"profit":4760},{"no":"HN-2602-018","d":"2026-02-25","region":"华南","prod":"便携音箱","price":299,"cost":180,"qty":22,"sales":6578,"profit":2618},{"no":"HB-2602-019","d":"2026-02-28","region":"华北","prod":"智能手环","price":199,"cost":120,"qty":15,"sales":2985,"profit":1185},{"no":"XN-2603-020","d":"2026-03-03","region":"西南","prod":"智能手环","price":199,"cost":120,"qty":30,"sales":5970,"profit":2370},{"no":"HD-2603-021","d":"2026-03-06","region":"华东","prod":"桌面支架","price":89,"cost":45,"qty":9,"sales":801,"profit":396},{"no":"HN-2603-022","d":"2026-03-09","region":"华南","prod":"桌面支架","price":89,"cost":45,"qty":24,"sales":2136,"profit":1056},{"no":"HB-2603-023","d":"2026-03-12","region":"华北","prod":"移动电源","price":149,"cost":90,"qty":33,"sales":4917,"profit":1947},{"no":"XN-2603-024","d":"2026-03-15","region":"西南","prod":"移动电源","price":149,"cost":90,"qty":20,"sales":2980,"profit":1180}];
+
+  /* ---------- 首屏图表 ---------- */
+  var barBox = $('#heroBars');
+  (function(){
+    var tot = {};
+    DATA.forEach(function(d){ tot[d.region] = (tot[d.region]||0) + d.sales; });
+    var list = Object.keys(tot).map(function(k){ return [k, tot[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
+    var max = list[0][1];
+    barBox.innerHTML = list.map(function(p){
+      return '<div class="mb"><span>'+p[0]+'</span><div class="mbtrack"><div class="mbfill" data-w="'+(p[1]/max*100).toFixed(1)+'%"></div></div><span class="mbval">'+(p[1]/10000).toFixed(1)+'万</span></div>';
+    }).join('');
+    var fills = $$('.mbfill', barBox);
+    function grow(){
+      fills.forEach(function(f,i){
+        f.style.transitionDelay = (i*80)+'ms';
+        f.style.width = f.getAttribute('data-w');
+      });
+    }
+    if(reduce){ fills.forEach(function(f){ f.style.transition='none'; f.style.width = f.getAttribute('data-w'); }); }
+    else { window.setTimeout(grow, 3200); }
+  })();
+
+  /* 重播首屏动画 */
+  $('#replay').addEventListener('click', function(){
+    var cells = $$('.mc');
+    cells.forEach(function(c){ c.style.animation='none'; });
+    void $('.mgrid').offsetWidth;
+    cells.forEach(function(c){ c.style.animation=''; });
+    var fills = $$('.mbfill', barBox);
+    fills.forEach(function(f){ f.style.transition='none'; f.style.width='0'; });
+    void $('.mock-chart').offsetWidth;
+    window.setTimeout(function(){
+      fills.forEach(function(f,i){
+        f.style.transition='';
+        f.style.transitionDelay = (i*80)+'ms';
+        f.style.width = f.getAttribute('data-w');
+      });
+    }, reduce ? 0 : 3200);
+  });
+
+  /* ---------- 顶部编辑栏跟随 ---------- */
+  var secs = $$('section.sec[data-ref]');
+  var tabs = $$('.sheettab');
+  function syncBar(){
+    var y = window.pageYOffset + 72, cur = secs[0];
+    secs.forEach(function(s){ if(s.offsetTop <= y) cur = s; });
+    $('#barRef').textContent = cur.getAttribute('data-ref');
+    $('#barVal').innerHTML = '<b>'+cur.getAttribute('data-name')+'</b>';
+    var id = '#' + cur.id;
+    tabs.forEach(function(t){ t.classList.toggle('on', t.getAttribute('href') === id); });
+  }
+  window.addEventListener('scroll', syncBar, {passive:true});
+  syncBar();
+
+  /* ---------- 功能区（工具） ---------- */
+  var RIBBON = [
+    { tab:'开始', groups:[
+      { name:'字体', tools:[
+        { id:'bold', label:'加粗', where:'开始 › 字体 › B', what:'把选中的内容变粗。', use:'表头行最便宜的「变专业」手段：加粗 + 深底 + 白字，一眼和数据分开。', keys:'Ctrl+B' },
+        { id:'fill', label:'填充颜色', where:'开始 › 字体 › 油漆桶', what:'给单元格加底色。', use:'只用于标记状态（异常、重点）。大面积铺色会让表更难读，配色不超过三种。' },
+        { id:'fontcolor', label:'字体颜色', where:'开始 › 字体 › A', what:'改文字颜色。', use:'通常和填充色配对使用；单靠颜色传递信息不可靠，要配文字说明。' }
+      ]},
+      { name:'对齐', tools:[
+        { id:'wrap', label:'自动换行', where:'开始 › 对齐方式 › 自动换行', what:'让长文字在格子里折行显示。', use:'备注、地址这类长文本用它，别用合并单元格去撑宽度。', keys:'Alt+Enter 可手动换行' },
+        { id:'center', label:'居中', where:'开始 › 对齐方式 › 居中', what:'水平居中选中区域。', use:'表头居中、正文左对齐、数字右对齐——这是最省事的排版规矩。' }
+      ]},
+      { name:'数字', tools:[
+        { id:'currency', label:'货币格式', where:'开始 › 数字 › 格式下拉 › 货币', what:'给数字加上货币符号和千分位。', use:'金额列必设。它只改显示，不改数值，求和结果不受影响。' },
+        { id:'percent', label:'百分比', where:'开始 › 数字 › 格式下拉 › 百分比', what:'把 0.425 显示成 42.5%。', use:'利润率、增长率。注意底层仍是小数，参与计算时按小数算。' },
+        { id:'comma', label:'千分位', where:'开始 › 数字 › 逗号样式', what:'1234567 显示成 1,234,567。', use:'大额数字一眼可读，汇报截图前建议全表统一。' }
+      ]},
+      { name:'样式', tools:[
+        { id:'condformat', label:'条件格式', where:'开始 › 样式 › 条件格式', what:'按规则自动给单元格上色。', use:'数量低于安全库存自动变红、高于目标自动变绿。数字一改颜色跟着变，这是它和手动刷色的根本区别。' }
+      ]},
+      { name:'编辑', tools:[
+        { id:'filter', label:'排序和筛选', where:'开始 › 编辑 › 排序和筛选', what:'给表头加下拉箭头，或按某列重排行。', use:'每天用得最多的两个动作都在这一个按钮下。筛选藏行，排序挪行，别混。', keys:'Ctrl+Shift+L' },
+        { id:'find', label:'查找', where:'开始 › 编辑 › 查找和选择', what:'在全表里定位内容。', use:'找一个订单号、一处异常值。查找全部能一次列出所有命中位置。', keys:'Ctrl+F / Ctrl+H' }
+      ]}
+    ]},
+    { tab:'数据', groups:[
+      { name:'排序和筛选', tools:[
+        { id:'sort', label:'排序', where:'数据 › 排序和筛选 › 排序', what:'按一列或多列重排整行。', use:'按销售额降序、按区域再按金额多级排序。排序前确认「扩展选定区域」，否则整行错位。' },
+        { id:'filter2', label:'筛选', where:'数据 › 排序和筛选 › 筛选', what:'按条件隐藏不符合的行。', use:'看华东、看某个产品、看数量大于 30 的单。多列筛选是「同时满足」的关系。' },
+        { id:'clear', label:'清除', where:'数据 › 排序和筛选 › 清除', what:'一次性取消所有筛选。', use:'筛完忘了清，后面求和会以为数据丢了——先点清除再核对行数。' },
+        { id:'advanced', label:'高级筛选', where:'数据 › 排序和筛选 › 高级', what:'用一块条件区域做复杂筛选。', use:'需要「或」关系（华东或华南）时用它，普通筛选只能做「与」。' }
+      ]},
+      { name:'数据工具', tools:[
+        { id:'texttocol', label:'分列', where:'数据 › 数据工具 › 分列', what:'把一列拆成多列，或批量把文本转成数字。', use:'「山东省 济南市」这类挤在一格的信息用它拆开；文本型数字也用它一键转数值。' },
+        { id:'dedupe', label:'删除重复项', where:'数据 › 数据工具 › 删除重复项', what:'按选定列去重。', use:'做客户名单、产品清单时用。注意它会删掉整行，先复制一份再操作。' },
+        { id:'validate', label:'数据验证', where:'数据 › 数据工具 › 数据验证', what:'限制单元格能填什么（下拉选项、数值范围）。', use:'给别人填的表加下拉，能挡掉一大半脏数据。' }
+      ]},
+      { name:'分级显示', tools:[
+        { id:'group', label:'组合', where:'数据 › 分级显示 › 组合', what:'把多行折叠成一组，可展开收起。', use:'报表有很多明细行时，把明细折叠起来只留汇总，查看方便。' }
+      ]}
+    ]},
+    { tab:'插入', groups:[
+      { name:'表格', tools:[
+        { id:'table', label:'表格', where:'插入 › 表格 › 表格', what:'把普通区域变成「超级表」。', use:'自动带筛选、自动扩展公式、自动套用配色。透视表的源数据用它最稳。', keys:'Ctrl+T' },
+        { id:'pivot', label:'数据透视表', where:'插入 › 表格 › 数据透视表', what:'生成一张可拖字段的汇总表。', use:'所有汇总需求的终点。选「新工作表」而不是覆盖原表。' }
+      ]},
+      { name:'图表', tools:[
+        { id:'chart', label:'柱状图', where:'插入 › 图表 › 柱形图', what:'把汇总结果画成图。', use:'给领导看的只有图和一一句结论。图表数据源最好是透视表，能跟着刷新。' },
+        { id:'spark', label:'迷你图', where:'插入 › 迷你图', what:'在单元格里画一条趋势线。', use:'一行一个产品时，右侧加一条迷你折线，比整张大图更紧凑。' }
+      ]},
+      { name:'筛选器', tools:[
+        { id:'slicer', label:'切片器', where:'插入 › 筛选器 › 切片器', what:'给透视表配一块可点的按钮板。', use:'点「华东」就只看华东，不用改筛选。发给同事时体验最好。' }
+      ]}
+    ]},
+    { tab:'视图', groups:[
+      { name:'窗口', tools:[
+        { id:'freeze', label:'冻结窗格', where:'视图 › 窗口 › 冻结窗格', what:'把表头（或首列）固定在屏幕上。', use:'表超过一屏就必须冻结。先选中表头下一行，再点「冻结拆分窗格」，这样表头才被锁住。' },
+        { id:'split', label:'拆分', where:'视图 › 窗口 › 拆分', what:'把窗口分成上下两块，各自滚动。', use:'核对首尾数据时用：上面看表头，下面看第 200 行，不用来回滚。' }
+      ]}
+    ]}
+  ];
+
+  (function buildRibbon(){
+    var tabBox = $('#rtabs'), panelBox = $('#rpanels');
+    tabBox.innerHTML = RIBBON.map(function(t,i){
+      return '<button class="rtab" role="tab" type="button" aria-selected="'+(i===0)+'" data-tab="'+i+'">'+t.tab+'</button>';
+    }).join('');
+    panelBox.innerHTML = RIBBON.map(function(t,i){
+      return '<div class="rpanel'+(i===0?' on':'')+'" role="tabpanel">' + t.groups.map(function(g){
+        return '<div class="rgroup"><div class="rgroup-btns">' + g.tools.map(function(tool){
+          return '<button class="rbtn" type="button" aria-pressed="false" data-tool="'+tool.id+'">'+tool.label+'</button>';
+        }).join('') + '</div><div class="rlabel">'+g.name+'</div></div>';
+      }).join('') + '</div>';
+    }).join('');
+
+    tabBox.addEventListener('click', function(e){
+      var b = e.target.closest('.rtab'); if(!b) return;
+      var idx = b.getAttribute('data-tab');
+      $$('.rtab', tabBox).forEach(function(x){ x.setAttribute('aria-selected', String(x === b)); });
+      $$('.rpanel', panelBox).forEach(function(p,i){ p.classList.toggle('on', String(i) === idx); });
+    });
+
+    var map = {};
+    RIBBON.forEach(function(t){ t.groups.forEach(function(g){ g.tools.forEach(function(x){ map[x.id] = x; }); }); });
+
+    panelBox.addEventListener('click', function(e){
+      var b = e.target.closest('.rbtn'); if(!b) return;
+      var tool = map[b.getAttribute('data-tool')];
+      $$('.rbtn').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+      $('#toolPanel').innerHTML =
+        '<p class="tp-title">'+tool.label+'</p>' +
+        '<p class="tp-loc">'+tool.where+'</p>' +
+        '<p class="tp-body">'+tool.what+' <b>什么时候用：</b>'+tool.use+'</p>' +
+        (tool.keys ? '<span class="tp-keys">'+tool.keys+'</span>' : '');
+    });
+  })();
+
+  /* ---------- 函数表 + 实验室 ---------- */
+  var FNS = [
+    { name:'SUM', what:'一列数字求和', syn:'=SUM(区域)', when:'算总额、算合计', hl:['sales'],
+      formula:'=SUM(G2:G13)', note:'区域别写整列（G:G），数据一多文件会明显变慢。',
+      calc:function(r){ var s=r.reduce(function(a,x){return a+x.sales;},0); return {v:money(s), d:'把 G2:G13 这一列 12 个数全部加起来，就是这段时间的销售总额。'}; } },
+    { name:'SUMIF', what:'按一个条件求和', syn:'=SUMIF(条件区域,"条件",求和区域)', when:'按区域、按产品汇总', hl:['region','sales'],
+      formula:'=SUMIF(B2:B13,"华东",G2:G13)', note:'条件区域和求和区域的行数必须一致，否则结果会错位。',
+      calc:function(r){ var s=r.filter(function(x){return x.region==='华东';}).reduce(function(a,x){return a+x.sales;},0); return {v:money(s), d:'在 B 列里找「华东」，把对应的 G 列加起来。这就是「华东卖了多少」的标准答案。'}; } },
+    { name:'SUMIFS', what:'按多个条件求和', syn:'=SUMIFS(求和区域,条件区域1,"条件1",…)', when:'多条件同时满足时汇总', hl:['sales','region','qty'],
+      formula:'=SUMIFS(G2:G13,B2:B13,"华东",F2:F13,">=20")', note:'注意顺序和 SUMIF 相反：SUMIFS 的第一个参数才是求和区域。',
+      calc:function(r){ var s=r.filter(function(x){return x.region==='华东' && x.qty>=20;}).reduce(function(a,x){return a+x.sales;},0); return {v:money(s), d:'两个条件同时成立才算：区域是华东，并且数量 ≥ 20。条件越多，能钻的细节越细。'}; } },
+    { name:'COUNTIF', what:'数符合条件的个数', syn:'=COUNTIF(区域,"条件")', when:'数单量、数门店数', hl:['region'],
+      formula:'=COUNTIF(B2:B13,"华南")', note:'数字条件不用引号，如 =COUNTIF(F2:F13,30)；带比较符号才要引号。',
+      calc:function(r){ var c=r.filter(function(x){return x.region==='华南';}).length; return {v:c+' 张', d:'「华南」在 B 列出现了几次，就是华南有几张订单。数个数比求和更常用，很多人却只会 SUM。'}; } },
+    { name:'COUNTIFS', what:'数多个条件同时满足的个数', syn:'=COUNTIFS(区域1,"条件1",区域2,"条件2")', when:'交叉统计订单数', hl:['region','qty'],
+      formula:'=COUNTIFS(B2:B13,"华南",F2:F13,">=30")', note:'条件写成 ">=30" 时，引号别用中文的。',
+      calc:function(r){ var c=r.filter(function(x){return x.region==='华南' && x.qty>=30;}).length; return {v:c+' 张', d:'华南 + 数量 ≥ 30，两个条件同时满足的订单有几张。'}; } },
+    { name:'AVERAGEIF', what:'按条件求平均值', syn:'=AVERAGEIF(条件区域,"条件",平均值区域)', when:'算品类平均单价、平均客单', hl:['prod','price'],
+      formula:'=AVERAGEIF(C2:C13,"便携音箱",D2:D13)', note:'平均值区域里空格会被忽略，但 0 会被算进去，口径要清楚。',
+      calc:function(r){ var a=r.filter(function(x){return x.prod==='便携音箱';}); var v=a.reduce(function(s,x){return s+x.price;},0)/a.length; return {v:money(v), d:'在所有便携音箱的订单里，算 D 列单价的平均值。这里同产品单价相同，所以结果等于单价本身。'}; } },
+    { name:'MAX', what:'取最大值', syn:'=MAX(区域)', when:'找最高金额、最高分', hl:['sales'],
+      formula:'=MAX(G2:G13)', note:'MAX 会忽略文本和空格，但不会忽略错误值。',
+      calc:function(r){ var m=Math.max.apply(null,r.map(function(x){return x.sales;})); return {v:money(m), d:'12 行销售额里最大的那一个。用 MAX 找峰值，比肉眼扫一遍可靠。'}; } },
+    { name:'LARGE', what:'取第 N 大的值', syn:'=LARGE(区域,N)', when:'排 Top 3、Top 10', hl:['sales'],
+      formula:'=LARGE(G2:G13,2)', note:'LARGE 是「第 N 大」，SMALL 是「第 N 小」，两者别混。',
+      calc:function(r){ var s=r.map(function(x){return x.sales;}).sort(function(a,b){return b-a;}); return {v:money(s[1]), d:'第二大的一笔销售额。把 2 改成 3 就是第三大，做 Top 榜就靠它。'}; } },
+    { name:'SUMPRODUCT', what:'两组数逐项相乘再相加', syn:'=SUMPRODUCT(区域1,区域2)', when:'没算销售额列也要出总额', hl:['price','qty'],
+      formula:'=SUMPRODUCT(D2:D13,F2:F13)', note:'两区域行数必须一致；结果是「单价×数量」的总和，不需要辅助列。',
+      calc:function(r){ var s=r.reduce(function(a,x){return a+x.price*x.qty;},0); return {v:money(s), d:'单价逐个乘数量，再把 12 个乘积加起来。它和 SUM(G列) 结果一样——区别是它不需要先建销售额列。'}; } },
+    { name:'IF', what:'二选一判断', syn:'=IF(条件,成立时,不成立时)', when:'达标 / 未达标、是否有库存', hl:['sales'],
+      formula:'=IF(G2>=8000,"重点单","普通单")', note:'文字结果必须用英文双引号包住，中文引号会报错。',
+      calc:function(r){ var a=r.filter(function(x){return x.sales>=8000;}).length; return {v:a+' 重点 / '+(r.length-a)+' 普通', d:'逐行判断销售额是否到 8000，到了标「重点单」。这就是给数字加一句人话。'}; } },
+    { name:'IFS', what:'多档判断', syn:'=IFS(条件1,值1,条件2,值2,…)', when:'分级、分档、评等级', hl:['sales'],
+      formula:'=IFS(G2>=8000,"重点单",G2>=4000,"常规单",TRUE,"小额单")', note:'IFS 从上往下判断，命中就停。顺序写反了，后面的条件永远轮不到。',
+      calc:function(r){ var a=0,b=0,c=0; r.forEach(function(x){ if(x.sales>=8000)a++; else if(x.sales>=4000)b++; else c++; }); return {v:a+' / '+b+' / '+c, d:'依次是 重点单 / 常规单 / 小额单 的数量。比套四层 IF 好读得多。'}; } },
+    { name:'IFERROR', what:'把错误值换成可读提示', syn:'=IFERROR(表达式,"出错时显示")', when:'包住除法、查找等易错公式', hl:['price','cost','sales'],
+      formula:'=IFERROR((D2-E2)*F2/G2,"需复核")', note:'试把某行数量改成 0：销售额变 0，利润率就除零报错了——IFERROR 会接住它。',
+      calc:function(r){ var x=r[0]; var v = x.sales ? pct((x.price-x.cost)*x.qty/x.sales) : '需复核'; return {v:v, d:'第 2 行的利润率。把第 2 行的数量改成 0：销售额变 0，这一格就从一个百分比变成「需复核」——#DIV/0! 被接住了。'}; } },
+    { name:'ROUND', what:'四舍五入到指定小数位', syn:'=ROUND(数值,2)', when:'保留两位小数、抹掉尾差', hl:['price','cost','sales'],
+      formula:'=ROUND((D2-E2)*F2/G2,3)', note:'ROUND 是四舍五入；ROUNDUP 向上取整、ROUNDDOWN 向下取整，别用错场景。',
+      calc:function(r){ var x=r[0]; var v= x.sales ? ((x.price-x.cost)*x.qty/x.sales).toFixed(3) : '—'; return {v:v, d:'利润率保留三位小数。显示成百分比时是 '+(x.sales?pct((x.price-x.cost)*x.qty/x.sales):'—')+'，但底层已经截到三位。'}; } },
+    { name:'VLOOKUP', what:'按一列值去另一张表取数', syn:'=VLOOKUP(查找值,查找区域,第几列,0)', when:'按产品查成本、按工号查姓名', hl:['prod'],
+      formula:'=VLOOKUP("智能手环",J2:K5,2,0)', note:'第四个参数写 0 才是精确匹配；写 1 会「近似匹配」，查不到时给你一个看似合理的错值——最坑的地方。',
+      calc:function(r){ var m={}; r.forEach(function(x){ m[x.prod]=x.cost; }); return {v:money(m['智能手环']||0), d:'在 J2:K5 这张两列小表（J 产品、K 成本）里找「智能手环」，返回第 2 列的成本。查找值必须在小表的第一列。'}; } },
+    { name:'XLOOKUP', what:'新版查找，能向左查', syn:'=XLOOKUP(查找值,查找列,返回列)', when:'Excel 2021 及以上、WPS 新版', hl:['prod'],
+      formula:'=XLOOKUP("智能手环",J2:J5,K2:K5)', note:'不用数第几列，也不怕插入新列。返回列可以在查找列左边，这是 VLOOKUP 做不到的。',
+      calc:function(r){ var m={}; r.forEach(function(x){ m[x.prod]=x.cost; }); return {v:money(m['智能手环']||0), d:'在 J 列找「智能手环」，返回 K 列对应的成本。没有第四个参数，默认就是精确匹配。'}; } },
+    { name:'INDEX+MATCH', what:'老版本里最稳的查找组合', syn:'=INDEX(返回列,MATCH(查找值,查找列,0))', when:'Excel 2016 及更早、要向左查', hl:['prod'],
+      formula:'=INDEX(K2:K5,MATCH("智能手环",J2:J5,0))', note:'MATCH 返回「第几行」，INDEX 再按行号取值。记顺序：先找位置，再取内容。',
+      calc:function(r){ var m={}; r.forEach(function(x){ m[x.prod]=x.cost; }); return {v:money(m['智能手环']||0), d:'MATCH 先在 J 列里定位「智能手环」在第 2 行，INDEX 再从 K 列取第 2 行的值。两个函数套起来，比 VLOOKUP 灵活。'}; } },
+    { name:'LEFT / MID / RIGHT', what:'按位置截取文本', syn:'=LEFT(文本,3) / MID(文本,起始,长度)', when:'从订单号、编码里取段落', hl:['no'],
+      formula:'=LEFT(A2,2) & " · " & MID(A2,4,4) & " · " & RIGHT(A2,3)', note:'截取结果是「文本」，要参与计算得先转成数字，可用 VALUE() 或在前面写 --。',
+      calc:function(r){ var n=r[0].no; return {v: n.slice(0,2)+' · '+n.slice(3,7)+' · '+n.slice(-3), d:'从订单号里拆出三段：前 2 位是区域代码，第 4–7 位是年月，最后 3 位是流水号。分列能做到，但公式更灵活。'}; } },
+    { name:'TEXT', what:'把数字转成指定格式的文本', syn:'=TEXT(值,"格式代码")', when:'拼标题、做中文日期', hl:['price','cost','sales'],
+      formula:'=TEXT((D2-E2)*F2/G2,"0.0%")', note:'"yyyy年m月" 可把真日期转成「2026年11月」；但转换后是文本，不能再排序或算差。',
+      calc:function(r){ var x=r[0]; var v = x.sales ? pct((x.price-x.cost)*x.qty/x.sales) : '需复核'; return {v: v, d:'把利润率转成「42.5%」这样的文本。用来拼一句话标题，比如「本月整体利润率 '+(x.sales?pct((x.price-x.cost)*x.qty/x.sales):'—')+'」。'}; } }
+  ];
+
+  (function buildFn(){
+    $('#fnBody').innerHTML = FNS.map(function(f,i){
+      return '<tr data-fn="'+i+'"><td class="fname">'+f.name+'</td><td>'+f.what+'</td><td class="fsyn">'+f.syn+'</td><td>'+f.when+'</td></tr>';
+    }).join('');
+    $('#fnBody').addEventListener('click', function(e){
+      var tr = e.target.closest('tr'); if(!tr) return;
+      setFn(parseInt(tr.getAttribute('data-fn'),10));
+    });
+  })();
+
+  var labRows = DATA.slice(0,12).map(function(o){ return {no:o.no,region:o.region,prod:o.prod,price:o.price,cost:o.cost,qty:o.qty,sales:o.sales}; });
+  var curFn = 0;
+
+  (function buildLab(){
+    var body = $('#labBody');
+    body.innerHTML = labRows.map(function(r,i){
+      var rowNo = i + 2;
+      return '<tr>' +
+        '<td class="rh">'+rowNo+'</td>' +
+        '<td class="no">'+r.no+'</td>' +
+        '<td data-col="region">'+r.region+'</td>' +
+        '<td data-col="prod">'+r.prod+'</td>' +
+        '<td class="num" data-col="price">'+r.price+'</td>' +
+        '<td class="num" data-col="cost">'+r.cost+'</td>' +
+        '<td class="num" data-col="qty"><input type="number" min="0" max="999" step="1" value="'+r.qty+'" data-row="'+i+'" aria-label="第 '+rowNo+' 行数量"></td>' +
+        '<td class="sales" data-col="sales">'+r.sales.toLocaleString('zh-CN')+'</td>' +
+        '</tr>';
+    }).join('');
+    body.addEventListener('input', function(e){
+      var inp = e.target; if(!inp || inp.tagName !== 'INPUT') return;
+      var i = parseInt(inp.getAttribute('data-row'),10);
+      var q = parseInt(inp.value,10); if(isNaN(q) || q<0) q = 0;
+      labRows[i].qty = q;
+      labRows[i].sales = labRows[i].price * q;
+      labRows[i].profit = (labRows[i].price - labRows[i].cost) * q;
+      var cell = inp.closest('tr').querySelector('.sales');
+      cell.textContent = labRows[i].sales.toLocaleString('zh-CN');
+      renderFn();
+    });
+    setFn(0);
+  })();
+
+  function setFn(idx){
+    curFn = idx;
+    var f = FNS[idx];
+    $$('#fnBody tr').forEach(function(tr,i){ tr.classList.toggle('sel', i === idx); });
+    $('#labFn').textContent = f.name;
+    $('#labFormula').textContent = f.formula;
+    $('#labNote').textContent = '易错点：' + f.note;
+    $$('#labBody td[data-col]').forEach(function(td){
+      td.classList.toggle('ref', f.hl.indexOf(td.getAttribute('data-col')) > -1);
+    });
+    renderFn();
+  }
+
+  function renderFn(){
+    var f = FNS[curFn];
+    var out = f.calc(labRows);
+    $('#labValue').textContent = out.v;
+    $('#labDesc').textContent = out.d;
+  }
+
+  /* ---------- 透视表搭建器 ---------- */
+  var FIELDS = [
+    { k:'region', n:'区域' },
+    { k:'prod', n:'产品' },
+    { k:'month', n:'月份' }
+  ];
+  var PV_VAL = { sales:'销售额', profit:'利润', qty:'数量', rate:'利润率' };
+  var state = { rows:['region'], cols:['prod'], vals:['sales'], filters:[], val:'sales', agg:'sum' };
+
+  function monthOf(d){ return parseInt(d.slice(5,7),10) + ' 月'; }
+  var PVDATA = DATA.map(function(o){
+    return { region:o.region, prod:o.prod, month:monthOf(o.d), sales:o.sales, profit:o.profit, qty:o.qty };
+  });
+
+  function buildFields(){
+    $('#pivFields').innerHTML = FIELDS.map(function(f){
+      var zone = state.rows.indexOf(f.k)>-1 ? 'rows' : state.cols.indexOf(f.k)>-1 ? 'cols' : state.filters.indexOf(f.k)>-1 ? 'filters' : '';
+      return '<div class="frow"><span class="fname2">'+f.n+'</span><div class="fbtns">' +
+        ['rows','cols','filters'].map(function(z){
+          var label = {rows:'行',cols:'列',filters:'筛'}[z];
+          return '<button class="fbtn'+(zone===z?' on':'')+'" type="button" data-field="'+f.k+'" data-zone="'+z+'">'+label+'</button>';
+        }).join('') + '</div></div>';
+    }).join('');
+  }
+
+  function moveField(k,z){
+    ['rows','cols','vals','filters'].forEach(function(zz){
+      var arr = state[zz];
+      var i = arr.indexOf(k);
+      if(i>-1) arr.splice(i,1);
+    });
+    state[z].push(k);
+    if(z==='vals' && k==='sales') state.val='sales';
+    renderPivot();
+  }
+
+  function chip(fieldKey, zone){
+    var f = FIELDS.filter(function(x){return x.k===fieldKey;})[0];
+    var label = f ? f.n : (PV_VAL[fieldKey]||fieldKey);
+    return '<span class="zchip">'+label+'<button class="zdel" type="button" data-rm="'+fieldKey+'" data-zone="'+zone+'" aria-label="移除'+label+'">×</button></span>';
+  }
+
+  function renderZones(){
+    ['rows','cols','vals','filters'].forEach(function(z){
+      var box = $('#z'+z.charAt(0).toUpperCase()+z.slice(1));
+      var arr = state[z];
+      if(!arr.length){ box.innerHTML = '<span class="empty">空</span>'; return; }
+      box.innerHTML = arr.map(function(k){
+        if(z==='vals'){
+          return '<span class="zchip">'+(PV_VAL[state.val]||'值')+' · '+( {sum:'求和',avg:'平均值',count:'计数'}[state.agg] )+'</span>';
+        }
+        if(z==='filters'){
+          var vals = PVDATA.map(function(o){return o[k];}).filter(function(v,i,a){return a.indexOf(v)===i;});
+          return '<span class="zchip">'+(FIELDS.filter(function(f){return f.k===k;})[0]||{n:k}).n+
+            '<select class="zsel" data-filter="'+k+'"><option value="">全部</option>'+vals.map(function(v){
+              return '<option value="'+v+'"'+(state.filterVals && state.filterVals[k]===v?' selected':'')+'>'+v+'</option>';
+            }).join('')+'</select>' +
+            '<button class="zdel" type="button" data-rm="'+k+'" data-zone="filters" aria-label="移除">×</button></span>';
+        }
+        return chip(k,z);
+      }).join('');
+    });
+  }
+
+  function aggValue(rows){
+    if(!rows.length) return null;
+    var v = state.val, a = state.agg;
+    if(v==='qty'){ if(a==='avg'){ return rows.reduce(function(s,x){return s+x.qty;},0)/rows.length; } return rows.reduce(function(s,x){return s+x.qty;},0); }
+    if(v==='rate'){ var s=rows.reduce(function(t,x){return t+x.sales;},0), p=rows.reduce(function(t,x){return t+x.profit;},0); return s?p/s:0; }
+    if(a==='count') return rows.length;
+    if(a==='avg'){
+      return rows.reduce(function(t,x){return t+x[v];},0)/rows.length;
+    }
+    return rows.reduce(function(t,x){return t+x[v];},0);
+  }
+
+  function fmtVal(v){
+    if(v===null) return '—';
+    if(state.val==='qty') return state.agg==='avg' ? v.toFixed(1) : num(v);
+    if(state.val==='rate') return pct(v);
+    return money(v);
+  }
+
+  function renderPivot(){
+    buildFields();
+    renderZones();
+    var out = $('#pivOut');
+    var rows = state.rows.slice(), cols = state.cols.slice();
+    var filtered = PVDATA.slice();
+    if(state.filterVals){ Object.keys(state.filterVals).forEach(function(k){ if(state.filterVals[k]) filtered = filtered.filter(function(o){ return String(o[k])===String(state.filterVals[k]); }); }); }
+
+    if(!rows.length && !cols.length){
+      out.innerHTML = '<div class="pv-empty">至少给一个字段点「行」，表才有东西可看。点上面的「行」按钮试试。</div>';
+      return;
+    }
+
+    function uniq(arr){ return arr.filter(function(v,i,a){ return a.indexOf(v)===i; }); }
+    var rowKeys = rows.length ? uniq(filtered.map(function(o){ return rows.map(function(k){return o[k];}).join(' / '); })) : ['合计'];
+    var colKeys = cols.length ? uniq(filtered.map(function(o){ return cols.map(function(k){return o[k];}).join(' / '); })) : [(PV_VAL[state.val]||'')+' '+{sum:'求和',avg:'平均值',count:'计数'}[state.agg]];
+
+    function matchRow(o){ return rows.length ? rows.map(function(k){return o[k];}).join(' / ') : '合计'; }
+    function matchCol(o){ return cols.length ? cols.map(function(k){return o[k];}).join(' / ') : colKeys[0]; }
+
+    var valLabel = (PV_VAL[state.val]||'') + ' · ' + {sum:'求和',avg:'平均值',count:'计数'}[state.agg];
+
+    var html = '<table class="pv"><thead><tr><th class="rowh">' + (rows.length ? rows.map(function(k){return (FIELDS.filter(function(f){return f.k===k;})[0]||{n:k}).n;}).join(' / ') : '合计') + '</th>';
+    colKeys.forEach(function(c){ html += '<th>'+c+'</th>'; });
+    html += '<th>总计</th></tr></thead><tbody>';
+
+    rowKeys.forEach(function(rk){
+      html += '<tr><td class="rowh">'+rk+'</td>';
+      var rowAll = filtered.filter(function(o){ return matchRow(o)===rk; });
+      colKeys.forEach(function(ck){
+        var cellRows = filtered.filter(function(o){ return matchRow(o)===rk && matchCol(o)===ck; });
+        html += '<td>'+fmtVal(aggValue(cellRows))+'</td>';
+      });
+      html += '<td>'+fmtVal(aggValue(rowAll))+'</td></tr>';
+    });
+
+    html += '<tr class="total"><td class="rowh">总计</td>';
+    colKeys.forEach(function(ck){
+      html += '<td>'+fmtVal(aggValue(filtered.filter(function(o){return matchCol(o)===ck;}))) +'</td>';
+    });
+    html += '<td>'+fmtVal(aggValue(filtered))+'</td></tr></tbody></table>';
+    html += '<p class="pv-hint">当前：'+rows.map(function(k){return (FIELDS.filter(function(f){return f.k===k;})[0]||{n:k}).n;}).join(' / ') +
+      (cols.length ? ' × ' + cols.map(function(k){return (FIELDS.filter(function(f){return f.k===k;})[0]||{n:k}).n;}).join(' / ') : '') +
+      ' ｜ 值：'+valLabel + ' ｜ '+filtered.length+' 条明细</p>';
+    out.innerHTML = html;
+  }
+
+  (function buildPivot(){
+    $('#pvVal').addEventListener('change', function(e){ state.val = e.target.value; renderPivot(); });
+    $('#pvAgg').addEventListener('change', function(e){ state.agg = e.target.value; renderPivot(); });
+    $('#pivReset').addEventListener('click', function(){
+      state = { rows:['region'], cols:['prod'], vals:['sales'], filters:[], val:'sales', agg:'sum' };
+      $('#pvVal').value = 'sales'; $('#pvAgg').value = 'sum';
+      renderPivot();
+    });
+    $('#pivFields').addEventListener('click', function(e){
+      var b = e.target.closest('.fbtn'); if(!b) return;
+      moveField(b.getAttribute('data-field'), b.getAttribute('data-zone'));
+    });
+    $('#pivot').addEventListener('click', function(e){
+      var d = e.target.closest('.zdel'); if(!d) return;
+      var k = d.getAttribute('data-rm'), z = d.getAttribute('data-zone');
+      var arr = state[z], i = arr.indexOf(k);
+      if(i>-1) arr.splice(i,1);
+      if(z==='filters' && state.filterVals) delete state.filterVals[k];
+      renderPivot();
+    });
+    $('#pivot').addEventListener('change', function(e){
+      var s = e.target.closest('.zsel'); if(!s) return;
+      state.filterVals = state.filterVals || {};
+      state.filterVals[s.getAttribute('data-filter')] = s.value;
+      renderPivot();
+    });
+    renderPivot();
+  })();
+
+  /* ---------- 打卡 ---------- */
+  var CHECKS = [
+    {d:'Day 1', t:'认清名称框、编辑栏、行号列标、工作表标签'},
+    {d:'Day 1', t:'说出自己手上那张表里 3 处不规范'},
+    {d:'Day 2', t:'独立做出「华东 + 数量 ≥ 20」的筛选'},
+    {d:'Day 2', t:'用条件格式让数量 ≥ 30 自动变色'},
+    {d:'Day 3', t:'不看教程，写出销售额、利润、利润率三列'},
+    {d:'Day 3', t:'说清 $ 的作用，知道什么时候必须用它'},
+    {d:'Day 4', t:'用 SUMIFS 做出一张 4 行的区域汇总表'},
+    {d:'Day 4', t:'用 COUNTIF 数出某个区域的订单数'},
+    {d:'Day 5', t:'用 VLOOKUP 按产品查出成本'},
+    {d:'Day 5', t:'用 IFERROR 盖住除零错误，表里不再出现 #DIV/0!'},
+    {d:'Day 6', t:'拖出一张「区域 × 产品」交叉表'},
+    {d:'Day 6', t:'加一个切片器，点一下就能筛选'},
+    {d:'Day 7', t:'用自己的真实表做出一页分析'},
+    {d:'Day 7', t:'在最上面写出一句能看懂的结论'}
+  ];
+
+  var CK_KEY = 'excel7day.checks.v1';
+  var saved = [];
+  try{ saved = JSON.parse(window.localStorage.getItem(CK_KEY) || '[]'); }catch(e){ saved = []; }
+
+  (function buildChecks(){
+    var box = $('#ckList');
+    box.innerHTML = CHECKS.map(function(c,i){
+      return '<label class="cklab"><input type="checkbox" data-ck="'+i+'"'+(saved.indexOf(i)>-1?' checked':'')+'><span><b>'+c.d+'</b> · '+c.t+'</span></label>';
+    }).join('');
+    box.addEventListener('change', function(e){
+      if(!e.target || e.target.type !== 'checkbox') return;
+      var i = parseInt(e.target.getAttribute('data-ck'),10);
+      var p = saved.indexOf(i);
+      if(e.target.checked && p<0) saved.push(i);
+      if(!e.target.checked && p>-1) saved.splice(p,1);
+      try{ window.localStorage.setItem(CK_KEY, JSON.stringify(saved)); }catch(err){}
+      syncChecks();
+    });
+    syncChecks();
+  })();
+
+  function syncChecks(){
+    var n = saved.length;
+    $('#ckCount').textContent = n;
+    $('#ckBar').style.width = (n / CHECKS.length * 100) + '%';
+    $('#barTally').textContent = '已学 ' + n + ' / ' + CHECKS.length;
+  }
+
+  /* ---------- 复制模板 ---------- */
+  $$('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = btn.getAttribute('data-copy');
+      var text = ($('#'+id).innerText || '').trim();
+      function done(){
+        btn.classList.add('done'); btn.textContent = '已复制';
+        window.setTimeout(function(){ btn.classList.remove('done'); btn.textContent = '复制'; }, 1600);
+      }
+      function fallback(){
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position='fixed'; ta.style.top='-9999px';
+        document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); done(); }catch(e){ btn.textContent = '请手动选中'; }
+        document.body.removeChild(ta);
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else { fallback(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>
